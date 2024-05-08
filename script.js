@@ -27,9 +27,12 @@ let defaultState = {
     backgroundColor: '#C4C3D0',
     textBoxBgColor: '#131516',
     textBoxTextColor: '#e8e6e3',
+    editingTextBox: false,
 };
 
 let state = JSON.parse(JSON.stringify(defaultState));
+
+let currentPageObjects = {currentPage: null, textboxList: [], textboxContentList: []};
 
 function saveState() {
     localStorage.setItem(storageKey, JSON.stringify(state));
@@ -68,6 +71,8 @@ function updateUI() {
 
 document.addEventListener('DOMContentLoaded', function () {
     loadState();
+    currentPageObjects.currentPage = getCurrentPage();
+    loadPageFromStorage();
     num_pages = document.getElementsByClassName("page").length;
 
     pz = panzoom(pc, {
@@ -208,7 +213,7 @@ function initTextBoxes() {
             if(closest_div.classList.contains("textBoxContent")){
                 closest_div = closest_div.parentNode;
             }
-            if(state.toggleOCRTextBoxes && !state.editableText){
+            if(state.toggleOCRTextBoxes && (!state.editableText && !state.editingTextBox)){
                 if(closest_div.classList.contains("doubleHovered")){
                     closest_div.classList.remove("doubleHovered");
                     window.getSelection().removeAllRanges();
@@ -246,7 +251,7 @@ function initTextBoxes() {
 
 function showAllTextBoxes(){
     console.log("Showing all text boxes")
-    let textBoxes = getCurrentPage().querySelectorAll('.textBox');
+    let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
         textBoxes[i].classList.add('hovered');
     }
@@ -254,9 +259,10 @@ function showAllTextBoxes(){
 
 function hideAllTextBoxes(){
     console.log("Hiding all text boxes...")
-    let textBoxes = getCurrentPage().querySelectorAll('.textBox');
+    let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
         textBoxes[i].classList.remove('hovered');
+        textBoxes[i].classList.remove('doubleHovered');
     }
 }
 
@@ -267,7 +273,7 @@ function isVisible(e) {
 function gatherFullText(){
     let result = `<div class="textBoxContent">`;
     let id = "page"+state.page_idx + "_fullTranslationTextBox";
-    let textBoxes = getCurrentPage().querySelectorAll('.textBoxContent');
+    let textBoxes = currentPageObjects.textboxContentList;
     for (let i = 0; i < textBoxes.length; i++) {
         if(isVisible(textBoxes[i]) && !textBoxes[i].id.includes("_fullTranslationTextBox")){
             result += "<p>"+textBoxes[i].textContent + "</p>";
@@ -275,7 +281,7 @@ function gatherFullText(){
     }
     // create dom element if not existing
     let container = document.getElementById(id);
-    let page = getCurrentPage();
+    let page = currentPageObjects.currentPage
     if(!container){
         page.innerHTML = `<div id="${id}" style="z-index: 30" class="textbox"></div>` + page.innerHTML;
         container = document.getElementById(id);
@@ -285,6 +291,12 @@ function gatherFullText(){
 }
 
 function updateProperties() {
+    let currentPage = getCurrentPage();
+    if(currentPage !== currentPageObjects.currentPage){
+        currentPageObjects.currentPage = currentPage;
+        currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
+        currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
+    }
     if (state.textBoxBorders) {
         r.style.setProperty('--textBoxBorderHoverColor', 'rgba(237, 28, 36, 0.3)');
     } else {
@@ -341,7 +353,7 @@ function updateProperties() {
 }
 
 function parse_textbox_changes(){
-    let textboxes = getCurrentPage().querySelectorAll('.textBoxContent');
+    let textboxes = currentPageObjects.textboxContentList;
     for (let i = 0; i < textboxes.length; i++) {
         let content = textboxes[i].textContent;
         if (content.includes("<eng>")){
@@ -359,7 +371,7 @@ function parse_textbox_changes(){
 }
 
 function saveCurrentPage(){
-    localStorage.setItem(getCurrentPage().id, getCurrentPage().innerHTML);
+    localStorage.setItem(currentPageObjects.currentPage.id, currentPageObjects.currentPage.innerHTML);
 }
 
 document.getElementById('menuR2l').addEventListener('click', function () {
@@ -698,14 +710,21 @@ function updatePage(new_page_idx) {
         getPage(state.page2_idx).style.display = "none";
     }
 
+    // update page idx
     if (isPageFirstOfPair(new_page_idx)) {
         state.page_idx = new_page_idx;
     } else {
         state.page_idx = new_page_idx - 1;
     }
 
-    getCurrentPage().style.display = "inline-block";
-    getCurrentPage().style.order = 2;
+    // update current page objects
+    loadPageFromStorage();
+    currentPageObjects.currentPage = getCurrentPage();
+    currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
+    currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
+
+    currentPageObjects.currentPage.style.display = "inline-block";
+    currentPageObjects.currentPage.style.order = 2;
 
     if (!state.singlePageView && state.page_idx < num_pages - 1 && !isPageFirstOfPair(state.page_idx + 1)) {
         state.page2_idx = state.page_idx + 1;
@@ -726,7 +745,6 @@ function updatePage(new_page_idx) {
     page2_txt = (state.page2_idx >= 0) ? ',' + (state.page2_idx + 1) : "";
     document.getElementById("pageIdxDisplay").innerHTML = (state.page_idx + 1) + page2_txt + '/' + num_pages;
 
-    loadPageFromStorage();
     saveState();
     updateProperties();
     zoomDefault();
@@ -814,9 +832,9 @@ document.addEventListener('copy', function(e){
 
 
 function loadPageFromStorage(){
-    let value = localStorage.getItem(getCurrentPage().id);
+    let value = localStorage.getItem(currentPageObjects.currentPage.id);
     if(value){
-        getCurrentPage().innerHTML = value;
+        currentPageObjects.currentPage.innerHTML = value;
     }
 }
 
@@ -834,4 +852,51 @@ async function saveFile(){
     const writableStream = await handle.createWritable();
     await writableStream.write(blob);
     await writableStream.close();
+}
+
+function moveElement(el, direction, amount){
+    if(direction == "left"){
+        el.style.left = (parseInt(el.style.left) - amount) + 'px';
+    }else if(direction == "up"){
+        el.style.top = (parseInt(el.style.top) - amount) + 'px';
+    }else if(direction == "right"){
+        el.style.left = (parseInt(el.style.left) + amount) + 'px';
+    }else if(direction == "down"){
+        el.style.top = (parseInt(el.style.top) + amount) + 'px';
+    }
+}
+
+function editTextBox(tb){
+    let container = tb.querySelector('.textBoxContent');
+    if(container.querySelector('textarea')){
+        state.editingTextBox = false;
+        // save
+        let content = container.querySelector('textarea').value;
+        if (content.includes("<eng>")){
+            content = content.replace("<eng>", "");
+            container.style.writingMode = "initial";
+        }else if(content.includes("<jp>")){
+            content = content.replace("<jp>", "");
+            container.style.writingMode = "vertical-rl";
+        }
+        container.innerHTML = `<p>${content}</p>`;
+        saveCurrentPage();
+    }else{
+        state.editingTextBox = true;
+        // get content
+        let content = container.textContent;
+        // update html with textarea
+        let ta = `<textarea style="width:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
+        container.innerHTML = ta;
+    
+    }
+}
+
+function toggleTextBoxControls(el){
+    if(el.style.display != "flex"){
+        el.style.display = "flex";
+    }
+    else{
+        el.style.display = "none";
+    }
 }

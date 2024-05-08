@@ -321,26 +321,51 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 
-.btn-close {
+.textBox-btn {
     display: none;
     font-size: 1em;
-    float: left;
     cursor: pointer;
     background: #4b4e50;
     margin-right: 10px;
     margin-bottom: 10px;
 }
-.btn-close:hover {
+.textBox-btn:hover {
     background: #3c3f41;
 }
 
-.textBox:hover .btn-close {
+.textBox:hover .textBox-btn {
     display: block;
 }
-.textBox.hovered .btn-close {
+.textBox.hovered .textBox-btn {
     display: block;
 }
 
-.textBox.doubleHovered .btn-close {
+.textBox.doubleHovered .textBox-btn {
     display: block;
+}
+
+.float-right {
+    float: right;
+}
+
+.float-left {
+    float: left;
+}
+
+.btn-close {
+    float:left;
+}
+
+.btn-move {
+    font-size: 0.8em;
+}
+
+.btn-edit {
+    font-size: 0.9em;
+    background-color: white;
+    color: black;
+}
+
+.textBox-btn-container {
+    display: none;
 }

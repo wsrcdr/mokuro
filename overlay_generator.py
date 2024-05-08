@@ -293,8 +293,25 @@ class OverlayGenerator:
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
                 with tag('div', klass='textBox', style=box_style):
-                    with tag('span', klass='btn-close', onclick='this.parentNode.remove();'):
-                        text('x')
+                    with tag('div'):
+                        with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
+                            text('x')
+                        with tag('span', klass='textBox-btn float-right', onclick='toggleTextBoxControls(this.parentNode.querySelector(".textBox-btn-container"));'):
+                            text('m')
+                        with tag('div', klass="textBox-btn-container", style="float:right;flex-direction:row;"):
+                            with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
+                                pass
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
+                                text('✎')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'left', 5)"):
+                                text('←')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'up', 5)"):
+                                text('↑')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'right', 5)"):
+                                text('→')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'down', 5)"):
+                                text('↓')
+                    doc.asis("<br/>")
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
                     if result_blk['vertical']:
@@ -331,7 +348,7 @@ class OverlayGenerator:
             'left': xmin,
             'top': ymin,
             'width': w+20,
-            'height': h,
+            'height': "fit-content",
             'font-size': f'{font_size}px',
             'z-index': z_index,
         }
