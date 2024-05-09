@@ -14,7 +14,6 @@ let defaultState = {
     singlePageView: true,
     ctrlToPan: false,
     textBoxBorders: false,
-    editableText: false,
     displayOCR: true,
     fontSize: "auto",
     eInkMode: false,
@@ -55,7 +54,6 @@ function updateUI() {
     document.getElementById("menuDoublePageView").checked = !state.singlePageView;
     document.getElementById("menuHasCover").checked = state.hasCover;
     document.getElementById("menuTextBoxBorders").checked = state.textBoxBorders;
-    document.getElementById("menuEditableText").checked = state.editableText;
     document.getElementById("menuDisplayOCR").checked = state.displayOCR;
     document.getElementById('menuFontSize').value = state.fontSize;
     document.getElementById('menuEInkMode').checked = state.eInkMode;
@@ -72,7 +70,12 @@ function updateUI() {
 document.addEventListener('DOMContentLoaded', function () {
     loadState();
     currentPageObjects.currentPage = getCurrentPage();
-    loadPageFromStorage();
+    let transferingData = sessionStorage.getItem("transferingData");
+    if(transferingData){
+        transferTextBoxTextFromStorage();
+    }else{
+        loadPageFromStorage(state.page_idx);
+    }
     num_pages = document.getElementsByClassName("page").length;
 
     pz = panzoom(pc, {
@@ -158,7 +161,7 @@ function pushNotify(title, content) {
       showIcon: true,
       showCloseButton: true,
       autoclose: true,
-      autotimeout: 3000,
+      autotimeout: 2000,
       gap: 20,
       distance: 20,
       type: 'outline',
@@ -176,31 +179,18 @@ function copyTextBoxContent(textBox){
 
 
 function getMouseCoordinates(e){
-    let x = e.pageX;
-	let y = e.pageY;
-	let bounds = document.getElementById("pagesContainer").getBoundingClientRect();
-    let pageBounds = document.body.getBoundingClientRect();
-    if(x < bounds.x){
-        x = 0;
-    }
-    else if (x > (bounds.x + bounds.width)){
-        x = pageBounds.width;
-    }else{
-        let offset_x = x-bounds.x;
-    let xratio = pageBounds.width / bounds.width;
-    x = offset_x * xratio;
-    }
-    if(y < bounds.y){
-        y = 0;
-    }
-    else if (y > bounds.y + bounds.height){
-        y = pageBounds.height;
-    }else{
-        let offset_y = y-bounds.y;
-        let yratio = pageBounds.height / bounds.height;
-        y = offset_y * yratio;
-    }
-    return {x: x, y: y};
+    let scale = pz.getTransform().scale;
+    // get canvas rectangle with absolute position of element
+    let rect = pc.getBoundingClientRect();
+
+    // subtract position from the global coordinates
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    return {
+        x: x * (1 / scale),  // multiply with inverse zoom factor
+        y: y * (1 / scale)
+    };
 }
 
 function initTextBoxes() {
@@ -209,42 +199,63 @@ function initTextBoxes() {
     document.addEventListener('mousedown', function(e){
         closest_div = e.target.closest('div');
         console.log('Clicked on: ', closest_div);
-        if(closest_div && (closest_div.classList.contains('textBox') || closest_div.classList.contains('textBoxContent'))){
-            if(closest_div.classList.contains("textBoxContent")){
-                closest_div = closest_div.parentNode;
-            }
-            if(state.toggleOCRTextBoxes && (!state.editableText && !state.editingTextBox)){
-                if(closest_div.classList.contains("doubleHovered")){
-                    closest_div.classList.remove("doubleHovered");
-                    window.getSelection().removeAllRanges();
+        if(closest_div){
+            let tb = closest_div.closest('.textBox');
+            if(tb && tb.contains(closest_div)){
+                console.log("Clicked inside a textbox!");
+                if(state.toggleOCRTextBoxes && !state.editingTextBox){
+                    if(tb.classList.contains("doubleHovered")){
+                        tb.classList.remove("doubleHovered");
+                        window.getSelection().removeAllRanges();
+                    }
+                    else if(tb.classList.contains("hovered")){
+                        tb.classList.remove("hovered");
+                        tb.classList.add("doubleHovered");
+                        // select and copy contents
+                        let contentNode = tb.querySelector('.textBoxContent');
+                        selectNode(contentNode);
+                        e.preventDefault();
+                        copyTextBoxContent(contentNode);
+                    }
+                    else {
+                        tb.classList.add("hovered");
+                    }
                 }
-                else if(closest_div.classList.contains("hovered")){
-                    closest_div.classList.remove("hovered");
-                    closest_div.classList.add("doubleHovered");
-                    // select and copy contents
-                    let contentNode = closest_div.querySelector('.textBoxContent');
-                    selectNode(contentNode);
-                    e.preventDefault();
-                    copyTextBoxContent(contentNode);
-                }
-                else {
-                    closest_div.classList.add("hovered");
+            }
+            else{
+                if(closest_div.classList.contains("pageContainer")){
+                    if(state.toggleTextBoxCreation){
+                        console.log("adding empty textbox");
+                        let div = document.createElement("div");
+                        div.classList.add("textBox", "hovered");
+                        let id = randomIdGenerator();
+                        div.id = id;
+                        let zindex = state.page_zindex[state.page_idx.toString()] || 50;
+                        state.page_zindex[state.page_idx.toString()] = zindex + 1;
+                        let coords = getMouseCoordinates(e);
+                        div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
+                        div.innerHTML = `\
+                            <div>\
+                                <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
+                                <span class="textBox-btn float-right" onclick="toggleTextBoxControls(this.parentNode.querySelector('.textBox-btn-container'));">m</span>\
+                                <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
+                                    <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
+                                    <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
+                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'left', 5)">←</span>\
+                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'up', 5)">↑</span>\
+                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'right', 5)">→</span>\
+                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'down', 5)">↓</span>\
+                                </div>\
+                            </div>\
+                            <br/>\
+                            <div class="textBoxContent">\
+                            <p>a</p>\
+                            </div>\
+                        </div>`
+                        closest_div.appendChild(div);
+                    }
                 }
             }
-        }else{
-            if(closest_div.classList.contains("pageContainer")){
-                if(state.toggleTextBoxCreation){
-                console.log("adding empty textbox");
-                let div = document.createElement("div");
-                div.classList.add("textBox", "hovered");
-                let zindex = state.page_zindex[state.page_idx.toString()] || 50;
-                state.page_zindex[state.page_idx.toString()] = zindex + 1;
-                let coords = getMouseCoordinates(e);
-                div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
-                div.innerHTML = `<span class="btn-close" onclick="this.parentNode.remove();">x</span><div class="textBoxContent"><p>a</p></div>`
-                closest_div.appendChild(div);
-            }
-        }
         }
     });
 }
@@ -303,8 +314,6 @@ function updateProperties() {
         r.style.setProperty('--textBoxBorderHoverColor', 'rgba(0, 0, 0, 0)');
     }
 
-    pc.contentEditable = state.editableText;
-
     if (state.displayOCR) {
         r.style.setProperty('--textBoxDisplay', 'initial');
     } else {
@@ -352,26 +361,11 @@ function updateProperties() {
     }
 }
 
-function parse_textbox_changes(){
-    let textboxes = currentPageObjects.textboxContentList;
-    for (let i = 0; i < textboxes.length; i++) {
-        let content = textboxes[i].textContent;
-        if (content.includes("<eng>")){
-            content = content.replace("<eng>", "");
-            textboxes[i].innerHTML = `<p>${content}</p>`;
-            textboxes[i].style.writingMode = "initial";
-        }else if(content.includes("<jp>")){
-            content = content.replace("<jp>", "");
-            textboxes[i].innerHTML = `<p>${content}</p>`;
-            textboxes[i].style.writingMode = "vertical-rl";
-        }
-        // save current page in storage
-        saveCurrentPage();
-    }
-}
-
 function saveCurrentPage(){
-    localStorage.setItem(currentPageObjects.currentPage.id, currentPageObjects.currentPage.innerHTML);
+    console.log("Saving current page...");
+    let page = getCurrentPage();
+    localStorage.setItem(page.id, page.innerHTML);
+    pushNotify('Saving page', 'Saved current page in storage');
 }
 
 document.getElementById('menuR2l').addEventListener('click', function () {
@@ -399,19 +393,6 @@ document.getElementById('menuHasCover').addEventListener('click', function () {
 
 document.getElementById('menuTextBoxBorders').addEventListener('click', function () {
     state.textBoxBorders = document.getElementById("menuTextBoxBorders").checked;
-    saveState();
-    updateProperties();
-}, false);
-
-document.getElementById('menuEditableText').addEventListener('click', function () {
-    // check for save
-    previous_state = state.editableText;
-    new_state = document.getElementById("menuEditableText").checked;
-    if (new_state === false && previous_state != new_state){
-        console.log("Deactivated edit text...");
-        parse_textbox_changes();
-    }
-    state.editableText = new_state;
     saveState();
     updateProperties();
 }, false);
@@ -506,6 +487,20 @@ document.getElementById('menuResetStorage').addEventListener('click', function (
     localStorage.clear();
     saveState();
     window.location.reload();
+}, false);
+
+document.getElementById('menuResetCurrentPage').addEventListener('click', function(){
+    localStorage.removeItem("page"+state.page_idx);
+    window.location.reload();
+}, false);
+
+document.getElementById('menuTransferTextBoxText').addEventListener('click', function(){
+    pushNotify('Replacing textbox text', "Getting textboxes' text from page storage and replacing the html. Page storage will be updated after this...");
+    startTextTransferFromStorage();
+}, false);
+
+document.getElementById('menuSavePage').addEventListener('click', function () {
+    saveCurrentPage();
 }, false);
 
 document.getElementById('menuSaveFile').addEventListener('click', function () {
@@ -718,7 +713,7 @@ function updatePage(new_page_idx) {
     }
 
     // update current page objects
-    loadPageFromStorage();
+    loadPageFromStorage(new_page_idx);
     currentPageObjects.currentPage = getCurrentPage();
     currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
     currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
@@ -831,10 +826,12 @@ document.addEventListener('copy', function(e){
   });
 
 
-function loadPageFromStorage(){
-    let value = localStorage.getItem(currentPageObjects.currentPage.id);
+function loadPageFromStorage(page_idx){
+    let key = "page" + page_idx;
+    let value = localStorage.getItem(key);
     if(value){
-        currentPageObjects.currentPage.innerHTML = value;
+        document.getElementById(key).innerHTML = value;
+        pushNotify("Loaded page from storage", "Loaded this page from storage");
     }
 }
 
@@ -886,7 +883,7 @@ function editTextBox(tb){
         // get content
         let content = container.textContent;
         // update html with textarea
-        let ta = `<textarea style="width:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
+        let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
         container.innerHTML = ta;
     
     }
@@ -895,8 +892,54 @@ function editTextBox(tb){
 function toggleTextBoxControls(el){
     if(el.style.display != "flex"){
         el.style.display = "flex";
+        el.style.flexWrap = "wrap";
     }
     else{
         el.style.display = "none";
     }
+}
+
+function startTextTransferFromStorage(){
+    let storageData = localStorage.getItem("page"+state.page_idx);
+    if(storageData){
+        sessionStorage.setItem("transferingData", "true");
+        window.location.reload();
+    }else{
+        pushNotify("Transfer canceled", "Page had no data in storage");
+    }
+}
+
+function transferTextBoxTextFromStorage(){
+    sessionStorage.removeItem('transferingData');
+    let storageData = localStorage.getItem("page"+state.page_idx);
+    if(storageData){
+        let data = {};
+        let pageTextboxes = getCurrentPage().querySelectorAll('.textBoxContent');
+        for(let i=0;i<pageTextboxes.length; i++){
+            data[pageTextboxes[i].id] = pageTextboxes[i];
+        }
+        let container = document.createElement("div");
+        container.id = "transferDataTempContainer";
+        container.innerHTML = storageData;
+        let storageTextboxes = container.querySelectorAll('.textBoxContent');
+        for(let i=0;i<storageTextboxes.length;i++){
+            let tb = storageTextboxes[i];
+            if(data[tb.id]){
+                data[tb.id].innerHTML = tb.innerHTML;
+                data[tb.id].setAttribute("style", tb.getAttribute("style"));
+                data[tb.id].closest('.textBox').setAttribute("style", tb.closest('.textBox').getAttribute("style"));
+            }else{
+                getCurrentPage().querySelector(".pageContainer").appendChild(tb.closest('.textBox'));
+            }
+        }
+        container.remove();
+        saveCurrentPage()
+    }
+}
+
+function randomIdGenerator() {
+    var S4 = function() {
+       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    };
+    return ("id"+S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 }

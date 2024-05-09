@@ -259,7 +259,6 @@ class OverlayGenerator:
                 option_toggle('menuCtrlToPan', 'ctrl+mouse to move ')
                 option_toggle('menuDisplayOCR', 'OCR enabled ')
                 option_toggle('menuTextBoxBorders', 'display boxes outlines ')
-                option_toggle('menuEditableText', 'editable text ')
                 option_select('menuFontSize', 'font size: ',
                               ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
                 option_toggle('menuEInkMode', 'e-ink mode ')
@@ -272,6 +271,9 @@ class OverlayGenerator:
                 option_color('menuTextBoxTextColor', 'textbox text color', '#e8e6e3')
                 option_click('menuReset', 'reset settings')
                 option_click('menuResetStorage', 'reset local storage')
+                option_click('menuResetCurrentPage', 'reset current page')
+                option_click('menuTransferTextBoxText', 'transfer text from page storage')
+                option_click('menuSavePage', 'save page in storage')
                 option_click('menuSaveFile', 'save file')
                 option_click('menuAbout', 'about/help')
 
@@ -293,12 +295,18 @@ class OverlayGenerator:
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
                 with tag('div', klass='textBox', style=box_style):
-                    with tag('div'):
+                    with tag('div', style="display:inline-block;width:100%"):
                         with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
                             text('x')
                         with tag('span', klass='textBox-btn float-right', onclick='toggleTextBoxControls(this.parentNode.querySelector(".textBox-btn-container"));'):
                             text('m')
                         with tag('div', klass="textBox-btn-container", style="float:right;flex-direction:row;"):
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
+                                text('⇥')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
+                                text('⤓')
+                            with tag('input', klass="textBox-btn btn-move", type="color", onchange=f"this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"):
+                                pass
                             with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
                                 pass
                             with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
