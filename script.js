@@ -244,7 +244,7 @@ function initTextBoxes() {
                         let coords = getMouseCoordinates(e);
                         div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
                         div.innerHTML = `\
-                            <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;">\
+                            <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;">\
                                 <div style="display:inline-block;">\
                                     <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
                                 </div>\
@@ -254,7 +254,7 @@ function initTextBoxes() {
                                 <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
                                     <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</span>\
                                     <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</span>\
-                                    <input type="text" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>\
+                                    <input type="text" class="textBox-btn btn-move" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>\
                                     <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
                                     <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
                                     <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'left', 5)">←</span>\
@@ -885,9 +885,11 @@ function toggleTextBoxControls(el){
     if(el.style.display != "flex"){
         el.style.display = "flex";
         el.style.flexWrap = "wrap";
+        el.parentNode.style.justifyContent = "start";
     }
     else{
         el.style.display = "none";
+        el.parentNode.style.justifyContent = "space-between";
     }
 }
 

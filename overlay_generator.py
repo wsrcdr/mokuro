@@ -298,7 +298,7 @@ class OverlayGenerator:
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
                 with tag('div', klass='textBox', style=box_style):
-                    with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;"):
+                    with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
                         with tag('div', style="display:inline-block;"):
                             with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
                                 text('x')
@@ -310,7 +310,7 @@ class OverlayGenerator:
                                 text('⇥')
                             with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
                                 text('⤓')
-                            doc.asis('<input type="text" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
+                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
                             with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
                                 pass
                             with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
