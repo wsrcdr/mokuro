@@ -24,7 +24,7 @@ let defaultState = {
     toggleTextBoxCreation: false,
     page_zindex: {},
     backgroundColor: '#C4C3D0',
-    textBoxBgColor: '#131516',
+    textBoxBgColor: '#363839e8',
     textBoxTextColor: '#e8e6e3',
     editingTextBox: false,
 };
@@ -123,8 +123,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // add hidden element to hold text selection
     document.getElementById("pagesContainer").innerHTML += `<p id="selectionContainer" style="display:none;"></p>`;
-
+    
+    afterInitialLoadFinish();
 }, false);
+
+function afterInitialLoadFinish(){
+    jscolor.presets.default = {
+        palette:'#F5F5F5,#212121,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0,#E91E63,#D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,', 
+        paletteCols:12
+    };
+    jscolor.install();
+}
 
 function disablePanzoomOnElement(element) {
     return document.getElementById('topMenu').contains(element);
@@ -203,7 +212,7 @@ function initTextBoxes() {
             let tb = closest_div.closest('.textBox');
             if(tb && tb.contains(closest_div)){
                 console.log("Clicked inside a textbox!");
-                if(state.toggleOCRTextBoxes && !state.editingTextBox){
+                if(state.toggleOCRTextBoxes && !state.editingTextBox && !state.showAllTextBoxes && !tb.classList.contains('force-open')){
                     if(tb.classList.contains("doubleHovered")){
                         tb.classList.remove("doubleHovered");
                         window.getSelection().removeAllRanges();
@@ -235,10 +244,17 @@ function initTextBoxes() {
                         let coords = getMouseCoordinates(e);
                         div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
                         div.innerHTML = `\
-                            <div>\
-                                <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
-                                <span class="textBox-btn float-right" onclick="toggleTextBoxControls(this.parentNode.querySelector('.textBox-btn-container'));">m</span>\
+                            <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;">\
+                                <div style="display:inline-block;">\
+                                    <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
+                                </div>\
+                                <div style="display:inline-block;">\
+                                    <span class="textBox-btn float-right" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
+                                </div>
                                 <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
+                                    <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</span>\
+                                    <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</span>\
+                                    <input type="text" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>\
                                     <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
                                     <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
                                     <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'left', 5)">←</span>\
@@ -247,12 +263,12 @@ function initTextBoxes() {
                                     <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'down', 5)">↓</span>\
                                 </div>\
                             </div>\
-                            <br/>\
                             <div class="textBoxContent">\
-                            <p>a</p>\
+                                <p></p>\
                             </div>\
                         </div>`
                         closest_div.appendChild(div);
+                        jscolor.install();
                     }
                 }
             }
@@ -315,7 +331,7 @@ function updateProperties() {
     }
 
     if (state.displayOCR) {
-        r.style.setProperty('--textBoxDisplay', 'initial');
+        r.style.setProperty('--textBoxDisplay', 'flex');
     } else {
         r.style.setProperty('--textBoxDisplay', 'none');
     }
@@ -364,7 +380,8 @@ function updateProperties() {
 function saveCurrentPage(){
     console.log("Saving current page...");
     let page = getCurrentPage();
-    localStorage.setItem(page.id, page.innerHTML);
+    let key = window.location.pathname + "_" + page.id;
+    localStorage.setItem(key, page.innerHTML);
     pushNotify('Saving page', 'Saved current page in storage');
 }
 
@@ -490,7 +507,7 @@ document.getElementById('menuResetStorage').addEventListener('click', function (
 }, false);
 
 document.getElementById('menuResetCurrentPage').addEventListener('click', function(){
-    localStorage.removeItem("page"+state.page_idx);
+    localStorage.removeItem(window.location.pathname+"_"+"page"+state.page_idx);
     window.location.reload();
 }, false);
 
@@ -549,34 +566,6 @@ document.getElementById('leftAPage').addEventListener('click', inputLeft, false)
 document.getElementById('leftAScreen').addEventListener('click', inputLeft, false);
 document.getElementById('rightAPage').addEventListener('click', inputRight, false);
 document.getElementById('rightAScreen').addEventListener('click', inputRight, false);
-
-document.addEventListener("keydown", function onEvent(e) {
-    switch (e.key) {
-        case "PageUp":
-            prevPage();
-            break;
-
-        case "PageDown":
-            nextPage();
-            break;
-
-        case "Home":
-            firstPage();
-            break;
-
-        case "End":
-            lastPage();
-            break;
-
-        case " ":
-            nextPage();
-            break;
-
-        case "0":
-            zoomDefault();
-            break;
-    }
-});
 
 function isPageFirstOfPair(page_idx) {
     if (state.singlePageView) {
@@ -827,10 +816,10 @@ document.addEventListener('copy', function(e){
 
 
 function loadPageFromStorage(page_idx){
-    let key = "page" + page_idx;
+    let key = window.location.pathname + "_" + "page" + page_idx;
     let value = localStorage.getItem(key);
     if(value){
-        document.getElementById(key).innerHTML = value;
+        document.getElementById("page"+page_idx).innerHTML = value;
         pushNotify("Loaded page from storage", "Loaded this page from storage");
     }
 }
@@ -867,6 +856,7 @@ function editTextBox(tb){
     let container = tb.querySelector('.textBoxContent');
     if(container.querySelector('textarea')){
         state.editingTextBox = false;
+        tb.classList.remove('force-open');
         // save
         let content = container.querySelector('textarea').value;
         if (content.includes("<eng>")){
@@ -880,8 +870,10 @@ function editTextBox(tb){
         saveCurrentPage();
     }else{
         state.editingTextBox = true;
+        tb.classList.add("hovered");
+        tb.classList.add('force-open');
         // get content
-        let content = container.textContent;
+        let content = container.innerHTML.replace("<p>", "").replace("</p>", "");
         // update html with textarea
         let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
         container.innerHTML = ta;
@@ -900,7 +892,7 @@ function toggleTextBoxControls(el){
 }
 
 function startTextTransferFromStorage(){
-    let storageData = localStorage.getItem("page"+state.page_idx);
+    let storageData = localStorage.getItem(window.location.pathname + "_"+"page"+state.page_idx);
     if(storageData){
         sessionStorage.setItem("transferingData", "true");
         window.location.reload();
@@ -911,7 +903,7 @@ function startTextTransferFromStorage(){
 
 function transferTextBoxTextFromStorage(){
     sessionStorage.removeItem('transferingData');
-    let storageData = localStorage.getItem("page"+state.page_idx);
+    let storageData = localStorage.getItem(window.location.pathname + "_"+"page"+state.page_idx);
     if(storageData){
         let data = {};
         let pageTextboxes = getCurrentPage().querySelectorAll('.textBoxContent');

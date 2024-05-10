@@ -16,6 +16,7 @@ from mokuro.utils import dump_json, load_json
 SCRIPT_PATH = Path(__file__).parent / 'script.js'
 STYLES_PATH = Path(__file__).parent / 'styles.css'
 PANZOOM_PATH = ASSETS_PATH / 'panzoom.min.js'
+JSCOLOR_PATH = Path(__file__).parent / 'jscolor.js'
 ICONS_PATH = ASSETS_PATH / 'icons'
 
 ABOUT = f"""
@@ -153,6 +154,8 @@ class OverlayGenerator:
                         pass
                 
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
+                with tag('script'):
+                    doc.asis(JSCOLOR_PATH.read_text())
                 if as_one_file:
                     with tag('script'):
                         doc.asis(PANZOOM_PATH.read_text())
@@ -295,18 +298,19 @@ class OverlayGenerator:
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
                 with tag('div', klass='textBox', style=box_style):
-                    with tag('div', style="display:inline-block;width:100%"):
-                        with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
-                            text('x')
-                        with tag('span', klass='textBox-btn float-right', onclick='toggleTextBoxControls(this.parentNode.querySelector(".textBox-btn-container"));'):
-                            text('m')
+                    with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;"):
+                        with tag('div', style="display:inline-block;"):
+                            with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
+                                text('x')
+                        with tag('div', style="display:inline-block;"):
+                            with tag('span', klass='textBox-btn', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
+                                text('m')
                         with tag('div', klass="textBox-btn-container", style="float:right;flex-direction:row;"):
                             with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
                                 text('⇥')
                             with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
                                 text('⤓')
-                            with tag('input', klass="textBox-btn btn-move", type="color", onchange=f"this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"):
-                                pass
+                            doc.asis('<input type="text" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
                             with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
                                 pass
                             with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
@@ -319,7 +323,7 @@ class OverlayGenerator:
                                 text('→')
                             with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'down', 5)"):
                                 text('↓')
-                    doc.asis("<br/>")
+                        
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
                     if result_blk['vertical']:
