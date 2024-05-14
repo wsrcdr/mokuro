@@ -2837,7 +2837,40 @@ var jsc = {
 					p.pal.appendChild(sw);
 				}
 			}
-
+			let psw_p = parseInt(THIS._palette.length);
+			let psw_r = Math.floor(psw_p/pickerDims.palette.cols);
+			let psw_c = psw_p % pickerDims.palette.cols;
+			console.log(`P: ${psw_p}, R: ${psw_r}, C: ${psw_c}`);
+			let psc = jsc.createEl('div'); // color sample's color
+			psc.style.width = (pickerDims.palette.cellW - 2 * THIS.controlBorderWidth) + 'px';
+			psc.style.height = (pickerDims.palette.cellH - 2 * THIS.controlBorderWidth) + 'px';
+			psc.style.backgroundColor = "#00000000";
+			let psw = jsc.createEl('div'); // color sample's wrap
+			psw.className = 'jscolor-palette-sw';
+			psw.style.left =
+				(
+					pickerDims.palette.cols <= 1 ? 0 :
+					Math.round(10 * (psw_c * ((pickerDims.contentW - pickerDims.palette.cellW) / (pickerDims.palette.cols - 1)))) / 10
+				) + 'px';
+			psw.style.top = (psw_r * (pickerDims.palette.cellH + THIS.paletteSpacing)) + 'px';
+			psw.style.border = THIS.controlBorderWidth + 'px solid';
+			psw.style.borderColor = THIS.controlBorderColor;
+			// create chessboard background if the sample has transparency
+			psw.style.backgroundImage = 'url(\'' + chessboard.canvas.toDataURL() + '\')';
+			psw.style.backgroundRepeat = 'repeat';
+			psw.style.backgroundPosition = 'center center';
+			psw.addEventListener('click', function(e){
+				let palette_value = THIS.palette + "," + THIS.toString();
+				for(let i=0;i<jsc.instances.length;i++){
+					jsc.instances[i].set__palette(palette_value);
+				}
+				let storageKey = window.location.pathname + "_jscolor_palette";
+				// save in storage
+				localStorage.setItem(storageKey, palette_value);
+				THIS.redraw();
+			})
+			psw.appendChild(psc);
+			p.pal.appendChild(psw);
 
 			// the Close button
 			function setBtnBorder () {

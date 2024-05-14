@@ -131,8 +131,10 @@ document.addEventListener('DOMContentLoaded', function () {
 }, false);
 
 function afterInitialLoadFinish() {
+    default_palette = '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
+    storage_palette = localStorage.getItem(window.location.pathname+"_jscolor_palette");
     jscolor.presets.default = {
-        palette: '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c',
+        palette: storage_palette || default_palette,
         paletteCols: 10,
         paletteSpacing: 0,
         paletteHeight: 28
