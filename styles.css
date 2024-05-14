@@ -47,19 +47,17 @@ body {
     overflow: auto;
     flex-direction: column;
     align-items: stretch;
+    opacity: 0;
 }
 
 .textBox:hover {
     background: var(--textBoxBgColor);
     border: 2px solid rgba(255, 255, 255);
     z-index: 999 !important;
+    opacity: 1;
 }
 
-.textBox .textBoxContent {
-    display: none;
-}
-
-.textBox:hover .textBoxContent {
+.textBoxContent {
     display: block;
     flex-grow: 1;
     align-self: center;
@@ -83,39 +81,21 @@ body {
     background: var(--textBoxBgColor);
     border: 2px solid rgba(255, 255, 255);
     z-index: 999 !important;
-}
-
-.force-open .textBoxContent {
-    display: block;
-    flex-grow: 1;
-    align-self: center;
-    align-content: center;
+    opacity: 1;
 }
 
 .hovered {
     background: var(--textBoxBgColor);
     border: 2px solid rgba(255, 255, 255);
     z-index: 999 !important;
-}
-
-.hovered .textBoxContent {
-    display: block;
-    flex-grow: 1;
-    align-self: center;
-    align-content: center;
+    opacity: 1;
 }
 
 .doubleHovered {
     background: var(--textBoxBgColor);
     border: 2px solid rgba(255, 255, 255);
     z-index: 999 !important;
-}
-
-.doubleHovered .textBoxContent{
-    display: block;
-    flex-grow: 1;
-    align-self: center;
-    align-content: center;
+    opacity: 1;
 }
 
 #pagesContainer {
@@ -338,7 +318,7 @@ input[type=number] {
 }
 
 .textBox-btn {
-    display: none;
+    display: block;
     font-size: 1em;
     cursor: pointer;
     background: #4b687a;
@@ -347,21 +327,6 @@ input[type=number] {
 }
 .textBox-btn:hover {
     background: #3c3f41;
-}
-
-.textBox:hover .textBox-btn {
-    display: block;
-}
-.textBox.hovered .textBox-btn {
-    display: block;
-}
-
-.textBox.doubleHovered .textBox-btn {
-    display: block;
-}
-
-.textBox.force-open .textBox-btn {
-    display: block;
 }
 
 .float-right {

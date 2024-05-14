@@ -27,13 +27,16 @@ let defaultState = {
     textBoxBgColor: '#363839e8',
     textBoxTextColor: '#e8e6e3',
     editingTextBox: false,
+    lastCopiedTb: null,
+    draggingTextBox: null,
 };
 
 let state = JSON.parse(JSON.stringify(defaultState));
 
-let currentPageObjects = {currentPage: null, textboxList: [], textboxContentList: []};
+let currentPageObjects = { currentPage: null, textboxList: [], textboxContentList: [] };
 
 function saveState() {
+    state.draggingTextBox = null;
     localStorage.setItem(storageKey, JSON.stringify(state));
 }
 
@@ -71,9 +74,9 @@ document.addEventListener('DOMContentLoaded', function () {
     loadState();
     currentPageObjects.currentPage = getCurrentPage();
     let transferingData = sessionStorage.getItem("transferingData");
-    if(transferingData){
+    if (transferingData) {
         transferTextBoxTextFromStorage();
-    }else{
+    } else {
         loadPageFromStorage(state.page_idx);
     }
     num_pages = document.getElementsByClassName("page").length;
@@ -123,14 +126,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // add hidden element to hold text selection
     document.getElementById("pagesContainer").innerHTML += `<p id="selectionContainer" style="display:none;"></p>`;
-    
+
     afterInitialLoadFinish();
 }, false);
 
-function afterInitialLoadFinish(){
+function afterInitialLoadFinish() {
     jscolor.presets.default = {
-        palette:'#F5F5F5,#212121,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0,#E91E63,#D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,', 
-        paletteCols:12
+        palette: '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c',
+        paletteCols: 10,
+        paletteSpacing: 0,
+        paletteHeight: 28
     };
     jscolor.install();
 }
@@ -139,18 +144,18 @@ function disablePanzoomOnElement(element) {
     return document.getElementById('topMenu').contains(element);
 }
 
-function removeNodeFromSelection(node){
+function removeNodeFromSelection(node) {
     let sel = window.getSelection();
-    for (let i=0; i<sel.rangeCount; i++){
+    for (let i = 0; i < sel.rangeCount; i++) {
         let r = sel.getRangeAt(i);
-        if(r.startContainer == node && r.endContainer == node){
+        if (r.startContainer == node && r.endContainer == node) {
             sel.removeRange(r);
             break;
         }
     }
 }
 
-function selectNode(node){
+function selectNode(node) {
     let sel = window.getSelection();
     sel.removeAllRanges();
     let range = new Range();
@@ -160,34 +165,37 @@ function selectNode(node){
 
 function pushNotify(title, content) {
     new Notify({
-      status: 'info',
-      title: title,
-      text: content,
-      effect: 'fade',
-      speed: 300,
-      customClass: null,
-      customIcon: null,
-      showIcon: true,
-      showCloseButton: true,
-      autoclose: true,
-      autotimeout: 2000,
-      gap: 20,
-      distance: 20,
-      type: 'outline',
-      position: 'right top'
+        status: 'info',
+        title: title,
+        text: content,
+        effect: 'fade',
+        speed: 300,
+        customClass: null,
+        customIcon: null,
+        showIcon: true,
+        showCloseButton: true,
+        autoclose: true,
+        autotimeout: 2000,
+        gap: 20,
+        distance: 20,
+        type: 'outline',
+        position: 'right top'
     });
-  }
+}
 
-function copyTextBoxContent(textBox){
-    if (navigator?.clipboard?.writeText) {
-        let content = textBox.textContent.replace(/[\n\r]+/g, ' ');
-        navigator.clipboard.writeText(content);
-        pushNotify("Copied text", content);
+function copyTextBoxContent(textBox) {
+    if (textBox !== state.lastCopiedTb) {
+        if (navigator?.clipboard?.writeText) {
+            let content = textBox.textContent.replace(/[\n\r]+/g, ' ');
+            navigator.clipboard.writeText(content);
+            pushNotify("Copied text", content);
+            state.lastCopiedTb = textBox;
+        }
     }
 }
 
 
-function getMouseCoordinates(e){
+function getMouseCoordinates(e) {
     let scale = pz.getTransform().scale;
     // get canvas rectangle with absolute position of element
     let rect = pc.getBoundingClientRect();
@@ -202,22 +210,47 @@ function getMouseCoordinates(e){
     };
 }
 
+document.addEventListener('keydown', function(e){
+    if(!state.editingTextBox){
+        if(e.key == "ArrowLeft"){
+            inputLeft();
+        }
+        if(e.key == "ArrowRight"){
+            inputRight();
+        }
+    }
+})
+
+document.addEventListener('mousedown', function (e){
+    if (state.draggingTextBox) {
+        state.draggingTextBox = null;
+    }
+});
+
+document.addEventListener('mousemove', function (e) {
+    if (state.draggingTextBox) {
+        let coords = getMouseCoordinates(e);
+        state.draggingTextBox.style.left = coords.x - (state.draggingTextBox.getBoundingClientRect().width / 2);
+        state.draggingTextBox.style.top = coords.y;
+    }
+});
+
 function initTextBoxes() {
     console.log("initiating text boxes...")
     // Add event listeners for toggling ocr text boxes with the toggleOCRTextBoxes option.
-    document.addEventListener('mousedown', function(e){
+    document.addEventListener('mouseup', function (e) {
         closest_div = e.target.closest('div');
         console.log('Clicked on: ', closest_div);
-        if(closest_div){
+        if (closest_div && !closest_div.classList.contains("textBox-btn-container") && !e.target.classList?.contains("textBox-btn")) {
             let tb = closest_div.closest('.textBox');
-            if(tb && tb.contains(closest_div)){
+            if (tb && tb.contains(closest_div)) {
                 console.log("Clicked inside a textbox!");
-                if(state.toggleOCRTextBoxes && !state.editingTextBox && !state.showAllTextBoxes && !tb.classList.contains('force-open')){
-                    if(tb.classList.contains("doubleHovered")){
+                if (state.toggleOCRTextBoxes && !state.editingTextBox && !state.showAllTextBoxes && !tb.classList.contains('force-open')) {
+                    if (tb.classList.contains("doubleHovered")) {
                         tb.classList.remove("doubleHovered");
                         window.getSelection().removeAllRanges();
                     }
-                    else if(tb.classList.contains("hovered")){
+                    else if (tb.classList.contains("hovered")) {
                         tb.classList.remove("hovered");
                         tb.classList.add("doubleHovered");
                         // select and copy contents
@@ -229,11 +262,16 @@ function initTextBoxes() {
                     else {
                         tb.classList.add("hovered");
                     }
+                } else if (state.toggleOCRTextBoxes && !state.editingTextBox && state.showAllTextBoxes && !tb.classList.contains('force-open')) {
+                    // select and copy contents
+                    let contentNode = tb.querySelector('.textBoxContent');
+                    selectNode(contentNode);
+                    copyTextBoxContent(contentNode);
                 }
             }
-            else{
-                if(closest_div.classList.contains("pageContainer")){
-                    if(state.toggleTextBoxCreation){
+            else {
+                if (closest_div.classList.contains("pageContainer")) {
+                    if (state.toggleTextBoxCreation) {
                         console.log("adding empty textbox");
                         let div = document.createElement("div");
                         div.classList.add("textBox", "hovered");
@@ -254,13 +292,11 @@ function initTextBoxes() {
                                 <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
                                     <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</span>\
                                     <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</span>\
-                                    <input type="text" class="textBox-btn btn-move" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>\
+                                    <input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>\
+                                    <input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.color=this.value;"></input>\
                                     <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
                                     <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
-                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'left', 5)">←</span>\
-                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'up', 5)">↑</span>\
-                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'right', 5)">→</span>\
-                                    <span class="textBox-btn btn-move" onclick="moveElement(this.closest('.textBox'), 'down', 5)">↓</span>\
+                                    <span class="textBox-btn btn-move", onclick=dragTextBox(this.closest('.textBox'))">✥</span>\
                                 </div>\
                             </div>\
                             <div class="textBoxContent">\
@@ -276,7 +312,7 @@ function initTextBoxes() {
     });
 }
 
-function showAllTextBoxes(){
+function showAllTextBoxes() {
     console.log("Showing all text boxes")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
@@ -284,7 +320,7 @@ function showAllTextBoxes(){
     }
 }
 
-function hideAllTextBoxes(){
+function hideAllTextBoxes() {
     console.log("Hiding all text boxes...")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
@@ -294,22 +330,22 @@ function hideAllTextBoxes(){
 }
 
 function isVisible(e) {
-    return !!( e.offsetWidth || e.offsetHeight || e.getClientRects().length );
+    return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
 }
 
-function gatherFullText(){
+function gatherFullText() {
     let result = `<div class="textBoxContent">`;
-    let id = "page"+state.page_idx + "_fullTranslationTextBox";
+    let id = "page" + state.page_idx + "_fullTranslationTextBox";
     let textBoxes = currentPageObjects.textboxContentList;
     for (let i = 0; i < textBoxes.length; i++) {
-        if(isVisible(textBoxes[i]) && !textBoxes[i].id.includes("_fullTranslationTextBox")){
-            result += "<p>"+textBoxes[i].textContent + "</p>";
+        if (isVisible(textBoxes[i]) && !textBoxes[i].id.includes("_fullTranslationTextBox")) {
+            result += "<p>" + textBoxes[i].textContent + "</p>";
         }
     }
     // create dom element if not existing
     let container = document.getElementById(id);
     let page = currentPageObjects.currentPage
-    if(!container){
+    if (!container) {
         page.innerHTML = `<div id="${id}" style="z-index: 30" class="textbox"></div>` + page.innerHTML;
         container = document.getElementById(id);
     }
@@ -319,7 +355,7 @@ function gatherFullText(){
 
 function updateProperties() {
     let currentPage = getCurrentPage();
-    if(currentPage !== currentPageObjects.currentPage){
+    if (currentPage !== currentPageObjects.currentPage) {
         currentPageObjects.currentPage = currentPage;
         currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
         currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
@@ -354,30 +390,30 @@ function updateProperties() {
         r.style.setProperty('--colorBackground', state.backgroundColor)
     }
 
-    if(state.textBoxBgColor){
+    if (state.textBoxBgColor) {
         r.style.setProperty('--textBoxBgColor', state.textBoxBgColor)
     }
-    if(state.textBoxTextColor){
+    if (state.textBoxTextColor) {
         r.style.setProperty('--textBoxTextColor', state.textBoxTextColor)
     }
 
-    if (state.showAllTextBoxes){
+    if (state.showAllTextBoxes) {
         showAllTextBoxes();
-    }else{
+    } else {
         hideAllTextBoxes();
     }
 
-    let page_translation = document.getElementById("page"+state.page_idx+"_fullTranslationTextBox");
-    if(page_translation){
-        if(state.toggleFullTranslation){
+    let page_translation = document.getElementById("page" + state.page_idx + "_fullTranslationTextBox");
+    if (page_translation) {
+        if (state.toggleFullTranslation) {
             page_translation.classList.add("hovered");
-        }else{
+        } else {
             page_translation.classList.remove("hovered");
         }
     }
 }
 
-function saveCurrentPage(){
+function saveCurrentPage() {
     console.log("Saving current page...");
     let page = getCurrentPage();
     let key = window.location.pathname + "_" + page.id;
@@ -457,12 +493,12 @@ document.getElementById('menuToggleTextBoxCreation').addEventListener('click', f
 document.getElementById('menuBackgroundColor').addEventListener(
     'input',
     function (event) {
-      state.backgroundColor = event.target.value;
-      saveState();
-      updateProperties();
+        state.backgroundColor = event.target.value;
+        saveState();
+        updateProperties();
     },
     false
-  );
+);
 document.getElementById('menuTextBoxBgColor').addEventListener(
     'input',
     function (event) {
@@ -506,12 +542,12 @@ document.getElementById('menuResetStorage').addEventListener('click', function (
     window.location.reload();
 }, false);
 
-document.getElementById('menuResetCurrentPage').addEventListener('click', function(){
-    localStorage.removeItem(window.location.pathname+"_"+"page"+state.page_idx);
+document.getElementById('menuResetCurrentPage').addEventListener('click', function () {
+    localStorage.removeItem(window.location.pathname + "_" + "page" + state.page_idx);
     window.location.reload();
 }, false);
 
-document.getElementById('menuTransferTextBoxText').addEventListener('click', function(){
+document.getElementById('menuTransferTextBoxText').addEventListener('click', function () {
     pushNotify('Replacing textbox text', "Getting textboxes' text from page storage and replacing the html. Page storage will be updated after this...");
     startTextTransferFromStorage();
 }, false);
@@ -583,7 +619,7 @@ function getPage(page_idx) {
     return document.getElementById("page" + page_idx);
 }
 
-function getCurrentPage(){
+function getCurrentPage() {
     return getPage(state.page_idx);
 }
 
@@ -808,67 +844,67 @@ function eInkRefresh() {
     }, 300);
 }
 
-document.addEventListener('copy', function(e){
+document.addEventListener('copy', function (e) {
     var text = window.getSelection().toString().replace(/[\n\r]+/g, ' ');
     e.clipboardData.setData('text/plain', text);
     e.preventDefault();
-  });
+});
 
 
-function loadPageFromStorage(page_idx){
+function loadPageFromStorage(page_idx) {
     let key = window.location.pathname + "_" + "page" + page_idx;
     let value = localStorage.getItem(key);
-    if(value){
-        document.getElementById("page"+page_idx).innerHTML = value;
+    if (value) {
+        document.getElementById("page" + page_idx).innerHTML = value;
         pushNotify("Loaded page from storage", "Loaded this page from storage");
     }
 }
 
-async function saveFile(){
+async function saveFile() {
     let handle = await window.showSaveFilePicker({
         suggestedName: 'mokuro-copy.html',
         types: [{
             description: 'HTML file',
-            accept: {'text/plain': ['.html']},
+            accept: { 'text/plain': ['.html'] },
         }],
     });
-    
+
     const blob = new Blob([document.querySelector("html").outerHTML]);
-    
+
     const writableStream = await handle.createWritable();
     await writableStream.write(blob);
     await writableStream.close();
 }
 
-function moveElement(el, direction, amount){
-    if(direction == "left"){
+function moveElement(el, direction, amount) {
+    if (direction == "left") {
         el.style.left = (parseInt(el.style.left) - amount) + 'px';
-    }else if(direction == "up"){
+    } else if (direction == "up") {
         el.style.top = (parseInt(el.style.top) - amount) + 'px';
-    }else if(direction == "right"){
+    } else if (direction == "right") {
         el.style.left = (parseInt(el.style.left) + amount) + 'px';
-    }else if(direction == "down"){
+    } else if (direction == "down") {
         el.style.top = (parseInt(el.style.top) + amount) + 'px';
     }
 }
 
-function editTextBox(tb){
+function editTextBox(tb) {
     let container = tb.querySelector('.textBoxContent');
-    if(container.querySelector('textarea')){
+    if (container.querySelector('textarea')) {
         state.editingTextBox = false;
         tb.classList.remove('force-open');
         // save
         let content = container.querySelector('textarea').value;
-        if (content.includes("<eng>")){
+        if (content.includes("<eng>")) {
             content = content.replace("<eng>", "");
             container.style.writingMode = "initial";
-        }else if(content.includes("<jp>")){
+        } else if (content.includes("<jp>")) {
             content = content.replace("<jp>", "");
             container.style.writingMode = "vertical-rl";
         }
         container.innerHTML = `<p>${content}</p>`;
         saveCurrentPage();
-    }else{
+    } else {
         state.editingTextBox = true;
         tb.classList.add("hovered");
         tb.classList.add('force-open');
@@ -877,52 +913,52 @@ function editTextBox(tb){
         // update html with textarea
         let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
         container.innerHTML = ta;
-    
+
     }
 }
 
-function toggleTextBoxControls(el){
-    if(el.style.display != "flex"){
+function toggleTextBoxControls(el) {
+    if (el.style.display != "flex") {
         el.style.display = "flex";
         el.style.flexWrap = "wrap";
         el.parentNode.style.justifyContent = "start";
     }
-    else{
+    else {
         el.style.display = "none";
         el.parentNode.style.justifyContent = "space-between";
     }
 }
 
-function startTextTransferFromStorage(){
-    let storageData = localStorage.getItem(window.location.pathname + "_"+"page"+state.page_idx);
-    if(storageData){
+function startTextTransferFromStorage() {
+    let storageData = localStorage.getItem(window.location.pathname + "_" + "page" + state.page_idx);
+    if (storageData) {
         sessionStorage.setItem("transferingData", "true");
         window.location.reload();
-    }else{
+    } else {
         pushNotify("Transfer canceled", "Page had no data in storage");
     }
 }
 
-function transferTextBoxTextFromStorage(){
+function transferTextBoxTextFromStorage() {
     sessionStorage.removeItem('transferingData');
-    let storageData = localStorage.getItem(window.location.pathname + "_"+"page"+state.page_idx);
-    if(storageData){
+    let storageData = localStorage.getItem(window.location.pathname + "_" + "page" + state.page_idx);
+    if (storageData) {
         let data = {};
         let pageTextboxes = getCurrentPage().querySelectorAll('.textBoxContent');
-        for(let i=0;i<pageTextboxes.length; i++){
+        for (let i = 0; i < pageTextboxes.length; i++) {
             data[pageTextboxes[i].id] = pageTextboxes[i];
         }
         let container = document.createElement("div");
         container.id = "transferDataTempContainer";
         container.innerHTML = storageData;
         let storageTextboxes = container.querySelectorAll('.textBoxContent');
-        for(let i=0;i<storageTextboxes.length;i++){
+        for (let i = 0; i < storageTextboxes.length; i++) {
             let tb = storageTextboxes[i];
-            if(data[tb.id]){
+            if (data[tb.id]) {
                 data[tb.id].innerHTML = tb.innerHTML;
                 data[tb.id].setAttribute("style", tb.getAttribute("style"));
                 data[tb.id].closest('.textBox').setAttribute("style", tb.closest('.textBox').getAttribute("style"));
-            }else{
+            } else {
                 getCurrentPage().querySelector(".pageContainer").appendChild(tb.closest('.textBox'));
             }
         }
@@ -932,8 +968,12 @@ function transferTextBoxTextFromStorage(){
 }
 
 function randomIdGenerator() {
-    var S4 = function() {
-       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    var S4 = function () {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
     };
-    return ("id"+S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+    return ("id" + S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+}
+
+function dragTextBox(tb) {
+    state.draggingTextBox = tb;
 }

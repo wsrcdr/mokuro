@@ -310,19 +310,14 @@ class OverlayGenerator:
                                 text('⇥')
                             with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
                                 text('⤓')
-                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="000000FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
+                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
+                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.color=this.value;"></input>')
                             with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
                                 pass
                             with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
                                 text('✎')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'left', 5)"):
-                                text('←')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'up', 5)"):
-                                text('↑')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'right', 5)"):
-                                text('→')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"moveElement(this.closest('.textBox'), 'down', 5)"):
-                                text('↓')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"dragTextBox(this.closest('.textBox'))"):
+                                text('✥')
                         
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
