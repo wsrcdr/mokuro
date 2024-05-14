@@ -977,5 +977,7 @@ function randomIdGenerator() {
 }
 
 function dragTextBox(tb) {
+    // close controls menu
+    toggleTextBoxControls(tb.querySelector('.textBox-btn-container'));
     state.draggingTextBox = tb;
 }
