@@ -298,7 +298,7 @@ function initTextBoxes() {
                                     <input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.color=this.value;"></input>\
                                     <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
                                     <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
-                                    <span class="textBox-btn btn-move", onclick=dragTextBox(this.closest('.textBox'))">✥</span>\
+                                    <span class="textBox-btn btn-move", onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
                                 </div>\
                             </div>\
                             <div class="textBoxContent">\
