@@ -298,7 +298,7 @@ function initTextBoxes() {
                                     <input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.color=this.value;"></input>\
                                     <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
                                     <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
-                                    <span class="textBox-btn btn-move", onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
+                                    <span class="textBox-btn btn-move" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
                                 </div>\
                             </div>\
                             <div class="textBoxContent">\
@@ -539,9 +539,7 @@ document.getElementById('menuReset').addEventListener('click', function () {
 }, false);
 
 document.getElementById('menuResetStorage').addEventListener('click', function () {
-    localStorage.clear();
-    saveState();
-    window.location.reload();
+    resetLocalStorage();
 }, false);
 
 document.getElementById('menuResetCurrentPage').addEventListener('click', function () {
@@ -980,4 +978,19 @@ function dragTextBox(tb) {
     // close controls menu
     toggleTextBoxControls(tb.querySelector('.textBox-btn-container'));
     state.draggingTextBox = tb;
+}
+
+function resetLocalStorage(){
+    let keys = [];
+    for(let i=0;i<localStorage.length;i++){
+        let key = localStorage.key(i);
+        if(key.includes(window.location.pathname)){
+            keys.push(key);
+        }
+    }
+    for(let a=0;a<keys.length;a++){
+        localStorage.removeItem(keys[a]);
+    }
+    saveState();
+    window.location.reload();
 }
