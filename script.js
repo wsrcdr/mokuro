@@ -4,7 +4,7 @@ let r = document.querySelector(':root');
 let pz;
 let showAboutOnStart = false;
 
-let storageKey = "mokuro_" + window.location.pathname;
+let storageKey = getStorageBaseKey() + "_mokuro_state";
 
 let defaultState = {
     page_idx: 0,
@@ -71,6 +71,7 @@ function updateUI() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    replaceOldStorageKey();
     loadState();
     currentPageObjects.currentPage = getCurrentPage();
     let transferingData = sessionStorage.getItem("transferingData");
@@ -131,14 +132,28 @@ document.addEventListener('DOMContentLoaded', function () {
 }, false);
 
 function afterInitialLoadFinish() {
-    default_palette = '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
-    storage_palette = localStorage.getItem(window.location.pathname+"_jscolor_palette");
+    let default_palette = '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
+    let storage_palette = localStorage.getItem(getStorageBaseKey()+"_jscolor_palette");
     jscolor.presets.default = {
         palette: storage_palette || default_palette,
         paletteCols: 10,
         paletteSpacing: 0,
         paletteHeight: 28
     };
+
+    // add some custom inputs here
+    let ids = [{id: "menuBackgroundColor", target: "state.backgroundColor"},
+    {id: "menuTextBoxBgColor", target: "state.textBoxBgColor"}, 
+    {id: "menuTextBoxTextColor", target: "state.textBoxTextColor"}];
+    for(let i=0;i<ids.length;i++){
+        let el = document.getElementById(ids[i].id);
+        el.setAttribute("type", "text");
+        el.setAttribute("onchange", `${ids[i].target}=this.value;saveState();updateProperties();`);
+        el.setAttribute("size", "8");
+        let opts = {value: el.getAttribute("value")};
+        new JSColor(el, opts);
+    }
+
     jscolor.install();
 }
 
@@ -275,36 +290,7 @@ function initTextBoxes() {
                 if (closest_div.classList.contains("pageContainer")) {
                     if (state.toggleTextBoxCreation) {
                         console.log("adding empty textbox");
-                        let div = document.createElement("div");
-                        div.classList.add("textBox", "hovered");
-                        let id = randomIdGenerator();
-                        div.id = id;
-                        let zindex = state.page_zindex[state.page_idx.toString()] || 50;
-                        state.page_zindex[state.page_idx.toString()] = zindex + 1;
-                        let coords = getMouseCoordinates(e);
-                        div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
-                        div.innerHTML = `\
-                            <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;">\
-                                <div style="display:inline-block;">\
-                                    <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
-                                </div>\
-                                <div style="display:inline-block;">\
-                                    <span class="textBox-btn float-right" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
-                                </div>
-                                <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
-                                    <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</span>\
-                                    <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</span>\
-                                    <input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>\
-                                    <input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.color=this.value;"></input>\
-                                    <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
-                                    <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
-                                    <span class="textBox-btn btn-move" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
-                                </div>\
-                            </div>\
-                            <div class="textBoxContent">\
-                                <p></p>\
-                            </div>\
-                        </div>`
+                        let div = createEmptyTextBox(state.page_idx, e);
                         closest_div.appendChild(div);
                         jscolor.install();
                     }
@@ -312,6 +298,47 @@ function initTextBoxes() {
             }
         }
     });
+}
+
+function createEmptyTextBox(page_idx, e){
+    let div = document.createElement("div");
+    div.classList.add("textBox", "hovered");
+    let id = randomIdGenerator();
+    div.id = id;
+    let zindex = state.page_zindex[page_idx.toString()] || 50;
+    state.page_zindex[page_idx.toString()] = zindex + 1;
+    let coords = {x: 0, y:0};
+    if(e){
+        coords = getMouseCoordinates(e);
+    }
+    div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
+    div.innerHTML = `\
+        <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;">\
+            <div style="display:inline-block;">\
+                <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
+            </div>\
+            <div style="display:inline-block;">\
+                <span class="textBox-btn btn-move" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
+            </div>\
+            <div style="display:inline-block;">\
+                <span class="textBox-btn float-right" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
+            </div>
+            <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
+                <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</span>\
+                <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</span>\
+                <input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
+                <input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
+                <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
+                <span class="textBox-btn btn-move" onclick="toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))">st</span>\
+                <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
+            </div>\
+        </div>\
+        <div class="textBoxContent black-stroke">\
+            <p></p>\
+        </div>\
+    </div>`;
+
+    return div;
 }
 
 function showAllTextBoxes() {
@@ -418,9 +445,16 @@ function updateProperties() {
 function saveCurrentPage() {
     console.log("Saving current page...");
     let page = getCurrentPage();
-    let key = window.location.pathname + "_" + page.id;
+    let key = getStorageBaseKey() + "_" + page.id;
     localStorage.setItem(key, page.innerHTML);
     pushNotify('Saving page', 'Saved current page in storage');
+}
+
+function savePage(page_idx) {
+    console.log("Saving page ", page_idx);
+    let page = getPage(page_idx);
+    let key = getStorageBaseKey() + "_" + page.id;
+    localStorage.setItem(key, page.innerHTML);
 }
 
 document.getElementById('menuR2l').addEventListener('click', function () {
@@ -491,34 +525,6 @@ document.getElementById('menuToggleTextBoxCreation').addEventListener('click', f
     updateProperties();
 }, false);
 
-
-document.getElementById('menuBackgroundColor').addEventListener(
-    'input',
-    function (event) {
-        state.backgroundColor = event.target.value;
-        saveState();
-        updateProperties();
-    },
-    false
-);
-document.getElementById('menuTextBoxBgColor').addEventListener(
-    'input',
-    function (event) {
-        state.textBoxBgColor = event.target.value;
-        saveState();
-        updateProperties();
-    },
-    false
-);
-document.getElementById('menuTextBoxTextColor').addEventListener(
-    'input',
-    function (event) {
-        state.textBoxTextColor = event.target.value;
-        saveState();
-        updateProperties();
-    },
-    false
-);
 document.getElementById('menuOriginalSize').addEventListener('click', zoomOriginal, false);
 document.getElementById('menuFitToWidth').addEventListener('click', zoomFitToWidth, false);
 document.getElementById('menuFitToScreen').addEventListener('click', zoomFitToScreen, false);
@@ -543,7 +549,7 @@ document.getElementById('menuResetStorage').addEventListener('click', function (
 }, false);
 
 document.getElementById('menuResetCurrentPage').addEventListener('click', function () {
-    localStorage.removeItem(window.location.pathname + "_" + "page" + state.page_idx);
+    localStorage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
     window.location.reload();
 }, false);
 
@@ -851,29 +857,48 @@ document.addEventListener('copy', function (e) {
 });
 
 
+function getStorageBaseKey(){
+    let key = window.location.pathname;
+    return key.slice(key.indexOf("hentai"));
+}
+
+function replaceOldStorageKey(){
+    let base_key = getStorageBaseKey();
+    for(let i=0;i<localStorage.length;i++){
+        let k = localStorage.key(i);
+        if(!k.startsWith(base_key) && k.includes(base_key)){
+            let v = localStorage.getItem(k);
+            let new_key = k.slice(k.indexOf(base_key));
+            localStorage.setItem(new_key, v);
+            localStorage.removeItem(k);
+        }
+    }
+}
+
 function loadPageFromStorage(page_idx) {
-    let key = window.location.pathname + "_" + "page" + page_idx;
+    let key = getStorageBaseKey() + "_" + "page" + page_idx;
     let value = localStorage.getItem(key);
     if (value) {
         document.getElementById("page" + page_idx).innerHTML = value;
+        jscolor.install();
         pushNotify("Loaded page from storage", "Loaded this page from storage");
     }
 }
 
 async function saveFile() {
-    let handle = await window.showSaveFilePicker({
-        suggestedName: 'mokuro-copy.html',
-        types: [{
-            description: 'HTML file',
-            accept: { 'text/plain': ['.html'] },
-        }],
-    });
-
-    const blob = new Blob([document.querySelector("html").outerHTML]);
-
-    const writableStream = await handle.createWritable();
-    await writableStream.write(blob);
-    await writableStream.close();
+    // deselect current page
+    getCurrentPage().style.display = "none";
+    let htmlContent = document.querySelector("html").outerHTML;
+    let bl = new Blob([htmlContent]);
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(bl);
+    a.download = "mokuro_modified.html";
+    a.hidden = true;
+    document.body.appendChild(a);
+    a.innerHTML = "something random - nobody will see this, it doesn't matter what you put here";
+    a.click();
+    // select current page again
+    getCurrentPage().style.display = "inline-block";
 }
 
 function moveElement(el, direction, amount) {
@@ -903,17 +928,20 @@ function editTextBox(tb) {
             container.style.writingMode = "vertical-rl";
         }
         container.innerHTML = `<p>${content}</p>`;
+        tb.style.height = tb.getAttribute("data-height");
+        tb.style.width = tb.getAttribute("data-width");
         saveCurrentPage();
     } else {
         state.editingTextBox = true;
         tb.classList.add("hovered");
         tb.classList.add('force-open');
+        tb.setAttribute("data-height", tb.style.height);
+        tb.setAttribute("data-width", tb.style.width);
         // get content
-        let content = container.innerHTML.replace("<p>", "").replace("</p>", "");
+        let content = container.innerHTML.replace("<p>", "").replace("</p>", "").trim();
         // update html with textarea
         let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
         container.innerHTML = ta;
-
     }
 }
 
@@ -930,40 +958,73 @@ function toggleTextBoxControls(el) {
 }
 
 function startTextTransferFromStorage() {
-    let storageData = localStorage.getItem(window.location.pathname + "_" + "page" + state.page_idx);
-    if (storageData) {
+    let start_transfer = false;
+    let key_template = getStorageBaseKey() + "_" + "page";
+    for(let i=0;i<localStorage.length;i++){
+        let key = localStorage.key(i);
+        if(key.includes(key_template)){
+            start_transfer = true;
+            break;
+        }
+    }
+    if (start_transfer) {
         sessionStorage.setItem("transferingData", "true");
         window.location.reload();
     } else {
-        pushNotify("Transfer canceled", "Page had no data in storage");
+        pushNotify("Transfer canceled", "Manga had no data in storage");
     }
 }
 
 function transferTextBoxTextFromStorage() {
     sessionStorage.removeItem('transferingData');
-    let storageData = localStorage.getItem(window.location.pathname + "_" + "page" + state.page_idx);
-    if (storageData) {
-        let data = {};
-        let pageTextboxes = getCurrentPage().querySelectorAll('.textBoxContent');
-        for (let i = 0; i < pageTextboxes.length; i++) {
-            data[pageTextboxes[i].id] = pageTextboxes[i];
+    let page_keys = [];
+    let key_template = getStorageBaseKey() + "_" + "page";
+    for(let i=0;i<localStorage.length;i++){
+        let key = localStorage.key(i);
+        if(key.includes(key_template)){
+            page_keys.push(key);
         }
-        let container = document.createElement("div");
-        container.id = "transferDataTempContainer";
-        container.innerHTML = storageData;
-        let storageTextboxes = container.querySelectorAll('.textBoxContent');
-        for (let i = 0; i < storageTextboxes.length; i++) {
-            let tb = storageTextboxes[i];
-            if (data[tb.id]) {
-                data[tb.id].innerHTML = tb.innerHTML;
-                data[tb.id].setAttribute("style", tb.getAttribute("style"));
-                data[tb.id].closest('.textBox').setAttribute("style", tb.closest('.textBox').getAttribute("style"));
-            } else {
-                getCurrentPage().querySelector(".pageContainer").appendChild(tb.closest('.textBox'));
+    }
+    for(let i=0;i<page_keys.length;i++){
+        console.log("Doing transfer for ", page_keys[i]);
+        let storageData = localStorage.getItem(page_keys[i]);
+        if (storageData) {
+            console.log("has storage");
+            let page_key_aux = page_keys[i].split("_");
+            let page_idx = page_key_aux[page_key_aux.length - 1].replace("page","");
+            let data = {};
+            let pageTextboxes = getPage(page_idx).querySelectorAll('.textBoxContent');
+            for (let i = 0; i < pageTextboxes.length; i++) {
+                data[pageTextboxes[i].id] = pageTextboxes[i];
             }
+            let container = document.createElement("div");
+            container.id = "transferDataTempContainer";
+            container.innerHTML = storageData;
+            let storageTextboxes = container.querySelectorAll('.textBoxContent');
+            console.log("Page textboxes: ", pageTextboxes);
+            console.log("Storage textboxes: ", storageTextboxes);
+            for (let i = 0; i < storageTextboxes.length; i++) {
+                let tb = storageTextboxes[i];
+                // textbox id exists both in storage and original html
+                if (data[tb.id]) {
+                    data[tb.id].innerHTML = tb.innerHTML;
+                    data[tb.id].setAttribute("style", tb.getAttribute("style"));
+                    data[tb.id].closest('.textBox').setAttribute("style", tb.closest('.textBox').getAttribute("style"));
+                // it's a new textbox
+                } else {
+                    let storage_tb = tb.closest('.textBox');
+                    // create an empty textbox
+                    let ntb = createEmptyTextBox(page_idx, null);
+                    // copy style
+                    ntb.setAttribute("style", storage_tb.getAttribute("style"));
+                    // edit the content
+                    ntb.querySelector('.textBoxContent').innerHTML = `<p>${tb.textContent}</p>`;
+                    getPage(page_idx).querySelector(".pageContainer").appendChild(ntb);
+                }
+            }
+            container.remove();
+            savePage(page_idx);
         }
-        container.remove();
-        saveCurrentPage()
     }
 }
 
@@ -975,8 +1036,6 @@ function randomIdGenerator() {
 }
 
 function dragTextBox(tb) {
-    // close controls menu
-    toggleTextBoxControls(tb.querySelector('.textBox-btn-container'));
     state.draggingTextBox = tb;
 }
 
@@ -984,7 +1043,7 @@ function resetLocalStorage(){
     let keys = [];
     for(let i=0;i<localStorage.length;i++){
         let key = localStorage.key(i);
-        if(key.includes(window.location.pathname)){
+        if(key.includes(getStorageBaseKey())){
             keys.push(key);
         }
     }
@@ -993,4 +1052,14 @@ function resetLocalStorage(){
     }
     saveState();
     window.location.reload();
+}
+
+function toggleStroke(el){
+    if (el.classList.contains("white-stroke")){
+        el.classList.remove("white-stroke");
+        el.classList.add("black-stroke");
+    }else{
+        el.classList.remove("black-stroke");
+        el.classList.add("white-stroke");
+    }
 }

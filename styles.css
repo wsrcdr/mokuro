@@ -48,6 +48,15 @@ body {
     flex-direction: column;
     align-items: stretch;
     opacity: 0;
+    
+}
+
+.black-stroke {
+    text-shadow: 0.000px 2.000px black, 0.390px 1.962px black, 0.765px 1.848px black, 1.111px 1.663px black, 1.414px 1.414px black, 1.663px 1.111px black, 1.848px 0.765px black, 1.962px 0.390px black, 2.000px 0.000px black, 1.962px -0.390px black, 1.848px -0.765px black, 1.663px -1.111px black, 1.414px -1.414px black, 1.111px -1.663px black, 0.765px -1.848px black, 0.390px -1.962px black, 0.000px -2.000px black, -0.390px -1.962px black, -0.765px -1.848px black, -1.111px -1.663px black, -1.414px -1.414px black, -1.663px -1.111px black, -1.848px -0.765px black, -1.962px -0.390px black, -2.000px -0.000px black, -1.962px 0.390px black, -1.848px 0.765px black, -1.663px 1.111px black, -1.414px 1.414px black, -1.111px 1.663px black, -0.765px 1.848px black, -0.390px 1.962px black;
+}
+
+.white-stroke {
+    text-shadow: 0.000em 0.075em white, 0.029em 0.069em white, 0.053em 0.053em white, 0.069em 0.029em white, 0.075em 0.000em white, 0.069em -0.029em white, 0.053em -0.053em white, 0.029em -0.069em white, 0.000em -0.075em white, -0.029em -0.069em white, -0.053em -0.053em white, -0.069em -0.029em white, -0.075em -0.000em white, -0.069em 0.029em white, -0.053em 0.053em white, -0.029em 0.069em white;
 }
 
 .textBox:hover {

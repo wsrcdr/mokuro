@@ -297,11 +297,14 @@ class OverlayGenerator:
             for result_blk, z_index in zip(result['blocks'], z_idxs):
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
-                with tag('div', klass='textBox', style=box_style):
+                with tag('div', klass='textBox black-stroke', style=box_style):
                     with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
                         with tag('div', style="display:inline-block;"):
                             with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
                                 text('x')
+                        with tag('div', style="display:inline-block;"):
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"dragTextBox(this.closest('.textBox'))"):
+                                text('✥')
                         with tag('div', style="display:inline-block;"):
                             with tag('span', klass='textBox-btn', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
                                 text('m')
@@ -311,19 +314,20 @@ class OverlayGenerator:
                             with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
                                 text('⤓')
                             doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
-                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.color=this.value;"></input>')
+                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
+                            with tag('span', klass='textBox-btn btn-move', onclick=f"toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))"):
+                                text('st')
                             with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
                                 pass
                             with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
                                 text('✎')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"dragTextBox(this.closest('.textBox'))"):
-                                text('✥')
+                            
                         
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
                     if result_blk['vertical']:
                         contentStyle='writing-mode: vertical-rl;'
-                    with tag('div', klass='textBoxContent', style=contentStyle, id=f"{id}_box{block_count}"):
+                    with tag('div', klass='textBoxContent black-stroke', style=contentStyle, id=f"{id}_box{block_count}"):
                         with tag('p'):
                             text(content)
                         '''
