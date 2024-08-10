@@ -82,10 +82,6 @@ body {
     white-space: pre-wrap;
 }
 
-.textBoxFontSizeOverride .textBox .textBoxContent p {
-    font-size: var(--textBoxFontSize) !important;
-}
-
 .force-open {
     background: var(--textBoxBgColor);
     border: 2px solid rgba(255, 255, 255);

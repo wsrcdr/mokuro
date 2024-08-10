@@ -20,7 +20,6 @@ let defaultState = {
     defaultZoomMode: "fit to screen",
     toggleOCRTextBoxes: true,
     showAllTextBoxes: false,
-    toggleFullTranslation: false,
     toggleTextBoxCreation: false,
     page_zindex: {},
     backgroundColor: '#C4C3D0',
@@ -63,7 +62,6 @@ function updateUI() {
     document.getElementById('menuDefaultZoom').value = state.defaultZoomMode;
     document.getElementById('menuToggleOCRTextBoxes').checked = state.toggleOCRTextBoxes;
     document.getElementById('menuShowAllOCRTextBoxes').checked = state.showAllTextBoxes;
-    document.getElementById('menuToggleFullTranslation').checked = state.toggleFullTranslation;
     document.getElementById('menuToggleTextBoxCreation').checked = state.toggleTextBoxCreation;
     document.getElementById('menuBackgroundColor').value = state.backgroundColor;
     document.getElementById('menuTextBoxBgColor').value = state.textBoxBgColor;
@@ -358,6 +356,13 @@ function hideAllTextBoxes() {
     }
 }
 
+function setAllTextBoxesFontSize(){
+    let textBoxes = currentPageObjects.textboxList;
+    for (let i = 0; i < textBoxes.length; i++) {
+        setTextBoxFontSize(textBoxes[i], state.fontSize + 'pt');
+    }
+}
+
 function isVisible(e) {
     return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
 }
@@ -405,8 +410,7 @@ function updateProperties() {
     if (state.fontSize === 'auto') {
         pc.classList.remove('textBoxFontSizeOverride');
     } else {
-        r.style.setProperty('--textBoxFontSize', state.fontSize + 'pt');
-        pc.classList.add('textBoxFontSizeOverride');
+        setAllTextBoxesFontSize();
     }
 
     if (state.eInkMode) {
@@ -430,15 +434,6 @@ function updateProperties() {
         showAllTextBoxes();
     } else {
         hideAllTextBoxes();
-    }
-
-    let page_translation = document.getElementById("page" + state.page_idx + "_fullTranslationTextBox");
-    if (page_translation) {
-        if (state.toggleFullTranslation) {
-            page_translation.classList.add("hovered");
-        } else {
-            page_translation.classList.remove("hovered");
-        }
     }
 }
 
@@ -509,12 +504,6 @@ document.getElementById('menuToggleOCRTextBoxes').addEventListener('click', func
 
 document.getElementById('menuShowAllOCRTextBoxes').addEventListener('click', function () {
     state.showAllTextBoxes = document.getElementById("menuShowAllOCRTextBoxes").checked;
-    saveState();
-    updateProperties();
-}, false);
-
-document.getElementById("menuToggleFullTranslation").addEventListener('click', function () {
-    state.toggleFullTranslation = document.getElementById("menuToggleFullTranslation").checked;
     saveState();
     updateProperties();
 }, false);
@@ -1062,4 +1051,10 @@ function toggleStroke(el){
         el.classList.remove("black-stroke");
         el.classList.add("white-stroke");
     }
+}
+
+function setTextBoxFontSize(tb, fontSize){
+    tb.style.fontSize = fontSize;
+    i = tb.querySelector('.textBox-btn-container').childNodes[5]; // the 6th input is the font-size input
+    i.setAttribute("value", fontSize.replace('pt', ''));
 }
