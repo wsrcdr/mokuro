@@ -302,7 +302,7 @@ class OverlayGenerator:
             for result_blk, z_index in zip(result['blocks'], z_idxs):
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
-                with tag('div', klass='textBox', style=box_style):
+                with tag('div', klass='textBox', style=box_style, id=f"{id}_box{block_count}"):
                     with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
                         with tag('div', style="display:inline-block;"):
                             with tag('span', klass='btn btn-outline-light btn-sm float-left m-1', onclick='removeTextBox(this.closest(".textBox"));'):
@@ -331,14 +331,14 @@ class OverlayGenerator:
                                     text('📋')
                             doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
                             doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
-                            with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
+                            with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
                                 pass
 
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
                     if result_blk['vertical']:
                         contentStyle='writing-mode: vertical-rl;'
-                    with tag('div', klass='textBoxContent black-stroke', style=contentStyle, id=f"{id}_box{block_count}"):
+                    with tag('div', klass='textBoxContent black-stroke', style=contentStyle, id=f"{id}_box{block_count}_content"):
                         with tag('p'):
                             text(content)
                         '''

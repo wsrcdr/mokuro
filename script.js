@@ -327,9 +327,13 @@ function createEmptyTextBox(page_idx, e){
                 <div class="d-inline-block">
                     <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
                 </div>
+                <div class="d-inline-block">
+                <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div>
+                <div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
+                </div>
                 <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
                 <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
-                <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
+                <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
             </div>\
         </div>\
         <div class="textBoxContent black-stroke">\
@@ -358,9 +362,9 @@ function hideAllTextBoxes() {
 }
 
 function setAllTextBoxesFontSize(){
-    let textBoxes = currentPageObjects.textboxList;
-    for (let i = 0; i < textBoxes.length; i++) {
-        setTextBoxFontSize(textBoxes[i], state.fontSize + 'pt');
+    let textboxes = pc.querySelectorAll('.textBox');
+    for(let i=0;i<textboxes.length;i++){
+        setTextBoxFontSize(textboxes[i], state.fontSize);
     }
 }
 
@@ -402,13 +406,6 @@ function updateProperties() {
         r.style.setProperty('--textBoxDisplay', 'flex');
     } else {
         r.style.setProperty('--textBoxDisplay', 'none');
-    }
-
-
-    if (state.fontSize === 'auto') {
-        pc.classList.remove('textBoxFontSizeOverride');
-    } else {
-        setAllTextBoxesFontSize();
     }
 
     if (state.backgroundColor) {
@@ -535,6 +532,9 @@ document.getElementById('dimOverlay').addEventListener('click', function () {
 
 document.getElementById('menuFontSize').addEventListener('change', (e) => {
     state.fontSize = e.target.value;
+    if(state.fontSize !== 'auto'){
+        setAllTextBoxesFontSize();
+    }
     saveState();
     updateProperties();
 });
@@ -1015,12 +1015,6 @@ function toggleStroke(el){
     }
 }
 
-function setTextBoxFontSize(tb, fontSize){
-    tb.style.fontSize = fontSize;
-    let i = tb.querySelector('.textBox-btn-container').querySelector('.font-size-input');
-    i.setAttribute("value", fontSize.replace('pt', ''));
-}
-
 function removeTextBox(tb){
     tb.remove();
     saveCurrentPage();
@@ -1068,4 +1062,9 @@ function pasteTextBoxStyle(tb){
         controls.querySelector('.bg-color-input').jscolor.fromString(currentTextBoxStyle.bg);
         controls.querySelector('.text-color-input').jscolor.fromString(currentTextBoxStyle.textColor);
     }
+}
+
+function setTextBoxFontSize(tb, fontSize){
+    tb.style.fontSize = fontSize + 'pt';
+    tb.querySelector('.textBox-btn-container').querySelector('.font-size-input').setAttribute("value", fontSize);
 }
