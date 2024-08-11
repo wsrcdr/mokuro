@@ -12,11 +12,8 @@ let defaultState = {
     hasCover: false,
     r2l: false,
     singlePageView: true,
-    ctrlToPan: false,
-    textBoxBorders: false,
     displayOCR: true,
     fontSize: 24,
-    eInkMode: false,
     defaultZoomMode: "fit to screen",
     toggleOCRTextBoxes: true,
     showAllTextBoxes: false,
@@ -52,13 +49,10 @@ function loadState() {
 
 function updateUI() {
     document.getElementById("menuR2l").checked = state.r2l;
-    document.getElementById("menuCtrlToPan").checked = state.ctrlToPan;
     document.getElementById("menuDoublePageView").checked = !state.singlePageView;
     document.getElementById("menuHasCover").checked = state.hasCover;
-    document.getElementById("menuTextBoxBorders").checked = state.textBoxBorders;
     document.getElementById("menuDisplayOCR").checked = state.displayOCR;
     document.getElementById('menuFontSize').value = state.fontSize;
-    document.getElementById('menuEInkMode').checked = state.eInkMode;
     document.getElementById('menuDefaultZoom').value = state.defaultZoomMode;
     document.getElementById('menuToggleOCRTextBoxes').checked = state.toggleOCRTextBoxes;
     document.getElementById('menuShowAllOCRTextBoxes').checked = state.showAllTextBoxes;
@@ -90,8 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         beforeMouseDown: function (e) {
             let shouldIgnore = disablePanzoomOnElement(e.target) ||
-                (e.target.closest('.textBox') !== null) ||
-                (state.ctrlToPan && !e.ctrlKey);
+                (e.target.closest('.textBox') !== null)
             return shouldIgnore;
         },
 
@@ -395,11 +388,8 @@ function updateProperties() {
         currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
         currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
     }
-    if (state.textBoxBorders) {
-        r.style.setProperty('--textBoxBorderHoverColor', 'rgba(237, 28, 36, 0.3)');
-    } else {
-        r.style.setProperty('--textBoxBorderHoverColor', 'rgba(0, 0, 0, 0)');
-    }
+    
+    r.style.setProperty('--textBoxBorderHoverColor', 'rgba(0, 0, 0, 0)');
 
     if (state.displayOCR) {
         r.style.setProperty('--textBoxDisplay', 'flex');
@@ -412,12 +402,6 @@ function updateProperties() {
         pc.classList.remove('textBoxFontSizeOverride');
     } else {
         setAllTextBoxesFontSize();
-    }
-
-    if (state.eInkMode) {
-        document.getElementById('topMenu').classList.add("notransition");
-    } else {
-        document.getElementById('topMenu').classList.remove("notransition");
     }
 
     if (state.backgroundColor) {
@@ -459,11 +443,6 @@ document.getElementById('menuR2l').addEventListener('click', function () {
     updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuCtrlToPan').addEventListener('click', function () {
-    state.ctrlToPan = document.getElementById("menuCtrlToPan").checked;
-    saveState();
-}, false);
-
 document.getElementById('menuDoublePageView').addEventListener('click', function () {
     state.singlePageView = !document.getElementById("menuDoublePageView").checked;
     saveState();
@@ -476,25 +455,10 @@ document.getElementById('menuHasCover').addEventListener('click', function () {
     updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuTextBoxBorders').addEventListener('click', function () {
-    state.textBoxBorders = document.getElementById("menuTextBoxBorders").checked;
-    saveState();
-    updateProperties();
-}, false);
-
 document.getElementById('menuDisplayOCR').addEventListener('click', function () {
     state.displayOCR = document.getElementById("menuDisplayOCR").checked;
     saveState();
     updateProperties();
-}, false);
-
-document.getElementById('menuEInkMode').addEventListener('click', function () {
-    state.eInkMode = document.getElementById("menuEInkMode").checked;
-    saveState();
-    updateProperties();
-    if (state.eInkMode) {
-        eInkRefresh();
-    }
 }, false);
 
 document.getElementById('menuToggleOCRTextBoxes').addEventListener('click', function () {
@@ -764,9 +728,6 @@ function updatePage(new_page_idx) {
     saveState();
     updateProperties();
     zoomDefault();
-    if (state.eInkMode) {
-        eInkRefresh();
-    }
 }
 
 function firstPage() {
@@ -829,15 +790,6 @@ function toggleFullScreen() {
     } else {
         cancelFullScreen.call(doc);
     }
-}
-
-function eInkRefresh() {
-    pc.classList.add("inverted");
-    document.body.style.backgroundColor = "black";
-    setTimeout(function () {
-        pc.classList.remove("inverted");
-        document.body.style.backgroundColor = r.style.getPropertyValue("--colorBackground");
-    }, 300);
 }
 
 document.addEventListener('copy', function (e) {

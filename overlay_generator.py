@@ -264,12 +264,9 @@ class OverlayGenerator:
                 option_toggle('menuR2l', 'right to left')
                 option_toggle('menuDoublePageView', 'display two pages ')
                 option_toggle('menuHasCover', 'first page is cover ')
-                option_toggle('menuCtrlToPan', 'ctrl+mouse to move ')
-                option_toggle('menuDisplayOCR', 'OCR enabled ')
-                option_toggle('menuTextBoxBorders', 'display boxes outlines ')
                 option_select('menuFontSize', 'font size: ',
                               ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
-                option_toggle('menuEInkMode', 'e-ink mode ')
+                option_toggle('menuDisplayOCR', 'OCR enabled ')
                 option_toggle('menuToggleOCRTextBoxes', 'toggle OCR text boxes on click')
                 option_toggle('menuShowAllOCRTextBoxes', 'Show all text boxes')
                 option_toggle('menuToggleTextBoxCreation', 'Create textbox on click')
