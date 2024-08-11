@@ -305,34 +305,34 @@ class OverlayGenerator:
                 with tag('div', klass='textBox', style=box_style, id=f"{id}_box{block_count}"):
                     with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm float-left m-1', onclick='removeTextBox(this.closest(".textBox"));'):
+                            with tag('span', klass='btn btn-outline-light btn-sm float-left', onclick='removeTextBox(this.closest(".textBox"));'):
                                 text('x')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm float-right m-1', onclick=f"dragTextBox(this.closest('.textBox'));"):
+                            with tag('span', klass='btn btn-outline-light btn-sm float-right', onclick=f"dragTextBox(this.closest('.textBox'));"):
                                 text('✥')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm m-1', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
+                            with tag('span', klass='btn btn-outline-light btn-sm', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
                                 text('m')
-                        with tag('div', klass="textBox-btn-container"):
-                            with tag('div', klass="d-inline-block"):
-                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"editTextBox(this.closest('.textBox'))"):
-                                    text('✎')
-                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))"):
-                                    text('st')
-                            with tag('div', klass="d-inline-block"):
-                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
-                                    text('⇥')
-                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
-                                    text('⤓')
-                            with tag('div', klass="d-inline-block"):
-                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"copyTextBoxStyle(this.closest('.textBox'));"):
-                                    text('✂️')
-                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"pasteTextBoxStyle(this.closest('.textBox'));"):
-                                    text('📋')
-                            doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
-                            doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
-                            with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
-                                pass
+                    with tag('div', klass="textBox-btn-container"):
+                        with tag('div', klass="d-inline-block"):
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"editTextBox(this.closest('.textBox'))"):
+                                text('✎')
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))"):
+                                text('st')
+                        with tag('div', klass="d-inline-block"):
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
+                                text('⇥')
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
+                                text('⤓')
+                        with tag('div', klass="d-inline-block"):
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"copyTextBoxStyle(this.closest('.textBox'));"):
+                                text('✂️')
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"pasteTextBoxStyle(this.closest('.textBox'));"):
+                                text('📋')
+                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
+                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
+                        with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
+                            pass
 
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''

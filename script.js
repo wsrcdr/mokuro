@@ -320,21 +320,21 @@ function createEmptyTextBox(page_idx, e){
             <div style="display:inline-block;">\
                 <span class="btn btn-outline-light btn-sm m-1" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
             </div>
-            <div class="textBox-btn-container">\
-                <div class="d-inline-block">
-                    <div class="btn btn-outline-light btn-sm m-1" onclick="editTextBox(this.closest('.textBox'))">✎</div><div class="btn btn-outline-light btn-sm m-1" onclick="toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))">st</div>
-                </div>
-                <div class="d-inline-block">
-                    <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
-                </div>
-                <div class="d-inline-block">
-                <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div>
-                <div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
-                </div>
-                <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
-                <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
-                <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
-            </div>\
+        </div>\
+        <div class="textBox-btn-container">\
+            <div class="d-inline-block">
+                <div class="btn btn-outline-light btn-sm m-1" onclick="editTextBox(this.closest('.textBox'))">✎</div><div class="btn btn-outline-light btn-sm m-1" onclick="toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))">st</div>
+            </div>
+            <div class="d-inline-block">
+                <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
+            </div>
+            <div class="d-inline-block">
+            <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div>
+            <div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
+            </div>
+            <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
+            <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
+            <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
         </div>\
         <div class="textBoxContent black-stroke">\
             <p></p>\
@@ -899,11 +899,9 @@ function toggleTextBoxControls(el) {
     if (el.style.display != "flex") {
         el.style.display = "flex";
         el.style.flexWrap = "wrap";
-        el.parentNode.style.justifyContent = "start";
     }
     else {
         el.style.display = "none";
-        el.parentNode.style.justifyContent = "space-between";
     }
 }
 
@@ -967,8 +965,9 @@ function transferTextBoxTextFromStorage() {
                     let ntb = createEmptyTextBox(page_idx, null);
                     // copy style
                     ntb.setAttribute("style", storage_tb.getAttribute("style"));
+                    ntb.querySelector('.textBoxContent').setAttribute("style", storage_tb.querySelector('.textBoxContent').getAttribute("style"));
                     // edit the content
-                    ntb.querySelector('.textBoxContent').innerHTML = `<p>${tb.textContent}</p>`;
+                    ntb.querySelector('.textBoxContent').innerHTML = tb.innerHTML;
                     getPage(page_idx).querySelector(".pageContainer").appendChild(ntb);
                 }
             }
@@ -1017,7 +1016,6 @@ function toggleStroke(el){
 
 function removeTextBox(tb){
     tb.remove();
-    saveCurrentPage();
 }
 
 class TextBoxStyle{
