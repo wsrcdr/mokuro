@@ -30,6 +30,7 @@ let defaultState = {
 let state = JSON.parse(JSON.stringify(defaultState));
 
 let currentPageObjects = { currentPage: null, textboxList: [], textboxContentList: [] };
+let currentTextBoxStyle = null;
 
 function saveState() {
     state.draggingTextBox = null;
@@ -326,8 +327,8 @@ function createEmptyTextBox(page_idx, e){
                 <div class="d-inline-block">
                     <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
                 </div>
-                <input type="text" class="btn btn-outline-light btn-sm m-1" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
-                <input type="text" class="btn btn-outline-light btn-sm m-1" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
+                <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
+                <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
                 <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
             </div>\
         </div>\
@@ -999,6 +1000,7 @@ function resetLocalStorage(){
     for(let a=0;a<keys.length;a++){
         localStorage.removeItem(keys[a]);
     }
+    state = JSON.parse(JSON.stringify(defaultState));
     saveState();
     window.location.reload();
 }
@@ -1015,7 +1017,7 @@ function toggleStroke(el){
 
 function setTextBoxFontSize(tb, fontSize){
     tb.style.fontSize = fontSize;
-    i = tb.querySelector('.textBox-btn-container').querySelector('.font-size-input');
+    let i = tb.querySelector('.textBox-btn-container').querySelector('.font-size-input');
     i.setAttribute("value", fontSize.replace('pt', ''));
 }
 
@@ -1024,14 +1026,46 @@ function removeTextBox(tb){
     saveCurrentPage();
 }
 
-class TextBoxProfile{
-    constructor(bg, text, glow){
+class TextBoxStyle{
+    constructor(bg, textColor, glow){
         this.bg = bg;
-        this.text = text;
+        this.textColor = textColor;
         this.glow = glow;
     }
 }
 
-function manageProfiles(){
-    
+function copyTextBoxStyle(tb){
+    let content = tb.querySelector('.textBoxContent');
+    let bg = tb.style.background;
+    if(!bg){
+        bg = state.textBoxBgColor;
+    }
+    let textColor = content.style.color;
+    if(!textColor){
+        textColor = state.textBoxTextColor;
+    }
+    let glow = "black-stroke";
+    if(content.classList.contains("white-stroke")){
+        glow = "white-stroke";
+    }
+    currentTextBoxStyle = new TextBoxStyle(bg, textColor, glow);
+}
+
+function pasteTextBoxStyle(tb){
+    if(!currentTextBoxStyle){
+        alert("You need to first copy a textbox style!");
+    }
+    else{
+        tb.style.background = currentTextBoxStyle.bg;
+        let content = tb.querySelector('.textBoxContent');
+        content.style.color = currentTextBoxStyle.textColor;
+        content.classList.remove('black-stroke');
+        content.classList.remove('white-stroke');
+        content.classList.add(currentTextBoxStyle.glow);
+
+        // update inputs
+        let controls = tb.querySelector('.textBox-btn-container');
+        controls.querySelector('.bg-color-input').jscolor.fromString(currentTextBoxStyle.bg);
+        controls.querySelector('.text-color-input').jscolor.fromString(currentTextBoxStyle.textColor);
+    }
 }
