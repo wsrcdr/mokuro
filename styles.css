@@ -360,6 +360,10 @@ input[type=number] {
     display: none;
 }
 
+.textBox-btn-container .btn {
+    font-size: 0.8rem;
+}
+
 .small-button {
     position: relative;
     display: inline-block;

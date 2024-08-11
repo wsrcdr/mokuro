@@ -15,7 +15,7 @@ let defaultState = {
     ctrlToPan: false,
     textBoxBorders: false,
     displayOCR: true,
-    fontSize: "auto",
+    fontSize: 24,
     eInkMode: false,
     defaultZoomMode: "fit to screen",
     toggleOCRTextBoxes: true,
@@ -919,6 +919,7 @@ function editTextBox(tb) {
         container.innerHTML = `<p>${content}</p>`;
         tb.style.height = tb.getAttribute("data-height");
         tb.style.width = tb.getAttribute("data-width");
+        toggleTextBoxControls(tb);
         saveCurrentPage();
     } else {
         state.editingTextBox = true;
@@ -1055,6 +1056,23 @@ function toggleStroke(el){
 
 function setTextBoxFontSize(tb, fontSize){
     tb.style.fontSize = fontSize;
-    i = tb.querySelector('.textBox-btn-container').childNodes[5]; // the 6th input is the font-size input
+    i = tb.querySelector('.textBox-btn-container').querySelector('.font-size-input');
     i.setAttribute("value", fontSize.replace('pt', ''));
+}
+
+function removeTextBox(tb){
+    tb.remove();
+    saveCurrentPage();
+}
+
+class TextBoxProfile{
+    constructor(bg, text, glow){
+        this.bg = bg;
+        this.text = text;
+        this.glow = glow;
+    }
+}
+
+function manageProfiles(){
+    
 }

@@ -14,9 +14,12 @@ from mokuro.manga_page_ocr import MangaPageOcr
 from mokuro.utils import dump_json, load_json
 
 SCRIPT_PATH = Path(__file__).parent / 'script.js'
+
 STYLES_PATH = Path(__file__).parent / 'styles.css'
 PANZOOM_PATH = ASSETS_PATH / 'panzoom.min.js'
-JSCOLOR_PATH = Path(__file__).parent / 'jscolor.js'
+JSCOLOR_PATH = ASSETS_PATH / 'jscolor.js'
+BOOTSTRAP_JS_PATH = ASSETS_PATH / 'bootstrap.bundle.min.js'
+BOOTSTRAP_CSS_PATH = ASSETS_PATH / 'bootstrap.min.css'
 ICONS_PATH = ASSETS_PATH / 'icons'
 
 ABOUT = f"""
@@ -108,6 +111,7 @@ class OverlayGenerator:
 
         with tag('html'):
             doc.asis('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.css" />')
+            doc.asis('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">')
             doc.asis('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
             doc.asis('<meta content="utf-8" http-equiv="encoding">')
             doc.asis(
@@ -153,6 +157,7 @@ class OverlayGenerator:
                     with tag('a', id='rightAPage', href='#'):
                         pass
                 
+                doc.asis('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>')
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
                 with tag('script'):
                     doc.asis(JSCOLOR_PATH.read_text())
@@ -299,29 +304,30 @@ class OverlayGenerator:
                 with tag('div', klass='textBox black-stroke', style=box_style):
                     with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='textBox-btn btn-close', onclick='this.closest(".textBox").remove();'):
+                            with tag('span', klass='btn btn-outline-light btn-sm float-left m-1', onclick='removeTextBox(this.closest(".textBox"))'):
                                 text('x')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"dragTextBox(this.closest('.textBox'))"):
+                            with tag('span', klass='btn btn-outline-light btn-sm float-right m-1', onclick=f"dragTextBox(this.closest('.textBox'))"):
                                 text('✥')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='textBox-btn', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
+                            with tag('span', klass='btn btn-outline-light btn-sm m-1', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
                                 text('m')
-                        with tag('div', klass="textBox-btn-container", style="float:right;flex-direction:row;"):
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
-                                text('⇥')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
-                                text('⤓')
-                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
-                            doc.asis('<input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))"):
-                                text('st')
-                            with tag('input', klass="textBox-btn btn-move", type="number", style="width:2em;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
+                        with tag('div', klass="textBox-btn-container"):
+                            with tag('div', klass="d-inline-block"):
+                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"editTextBox(this.closest('.textBox'))"):
+                                    text('✎')
+                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))"):
+                                    text('st')
+                            with tag('div', klass="d-inline-block"):
+                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
+                                    text('⇥')
+                                with tag('div', klass='btn btn-outline-light btn-sm m-1', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
+                                    text('⤓')
+                            doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
+                            doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
+                            with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"this.closest('.textBox').style.fontSize=this.value;"):
                                 pass
-                            with tag('span', klass='textBox-btn btn-move', onclick=f"editTextBox(this.closest('.textBox'))"):
-                                text('✎')
-                            
-                        
+
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
                     if result_blk['vertical']:
