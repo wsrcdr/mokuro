@@ -239,6 +239,7 @@ document.addEventListener('keydown', function(e){
 document.addEventListener('mousedown', function (e){
     if (state.draggingTextBox) {
         state.draggingTextBox = null;
+        saveCurrentPage();
     }
 });
 
