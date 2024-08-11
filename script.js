@@ -13,7 +13,7 @@ let defaultState = {
     r2l: false,
     singlePageView: true,
     displayOCR: true,
-    fontSize: 24,
+    fontSize: 20,
     defaultZoomMode: "fit to screen",
     toggleOCRTextBoxes: true,
     showAllTextBoxes: false,
@@ -303,26 +303,32 @@ function createEmptyTextBox(page_idx, e){
     if(e){
         coords = getMouseCoordinates(e);
     }
+    let fontSize = state.fontSize;
+    if(fontSize === 'auto'){
+        fontSize = 20;
+    }
     div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
     div.innerHTML = `\
         <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;">\
             <div style="display:inline-block;">\
-                <span class="textBox-btn btn-close" onclick="this.closest('.textBox').remove();">x</span>\
+                <span class="btn btn-outline-light btn-sm float-left m-1" onclick="removeTextBox(this.closest('.textBox'))">x</span>\
             </div>\
             <div style="display:inline-block;">\
-                <span class="textBox-btn btn-move" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
+                <span class="btn btn-outline-light btn-sm float-right m-1" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
             </div>\
             <div style="display:inline-block;">\
-                <span class="textBox-btn float-right" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
+                <span class="btn btn-outline-light btn-sm m-1" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
             </div>
-            <div class="textBox-btn-container" style="float:right;flex-direction:row;">\
-                <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</span>\
-                <span class="textBox-btn btn-move" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</span>\
-                <input type="text" class="textBox-btn btn-move" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
-                <input type="text" class="textBox-btn btn-move" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
-                <input class="textBox-btn btn-move" type="number" style="width:2em;" min="8" value="32" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
-                <span class="textBox-btn btn-move" onclick="toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))">st</span>\
-                <span class="textBox-btn btn-move" onclick="editTextBox(this.closest('.textBox'))">✎</span>\
+            <div class="textBox-btn-container">\
+                <div class="d-inline-block">
+                    <div class="btn btn-outline-light btn-sm m-1" onclick="editTextBox(this.closest('.textBox'))">✎</div><div class="btn btn-outline-light btn-sm m-1" onclick="toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))">st</div>
+                </div>
+                <div class="d-inline-block">
+                    <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
+                </div>
+                <input type="text" class="btn btn-outline-light btn-sm m-1" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
+                <input type="text" class="btn btn-outline-light btn-sm m-1" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
+                <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="this.closest('.textBox').style.fontSize=this.value;"></input>\
             </div>\
         </div>\
         <div class="textBoxContent black-stroke">\

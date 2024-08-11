@@ -298,7 +298,7 @@ class OverlayGenerator:
             for result_blk, z_index in zip(result['blocks'], z_idxs):
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
-                with tag('div', klass='textBox black-stroke', style=box_style):
+                with tag('div', klass='textBox', style=box_style):
                     with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
                         with tag('div', style="display:inline-block;"):
                             with tag('span', klass='btn btn-outline-light btn-sm float-left m-1', onclick='removeTextBox(this.closest(".textBox"))'):
