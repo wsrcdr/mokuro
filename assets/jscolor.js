@@ -2866,7 +2866,7 @@ var jsc = {
 				}
 				let storageKey = window.location.pathname + "_jscolor_palette";
 				// save in storage
-				localStorage.setItem(storageKey, palette_value);
+				localforage.setItem(storageKey, palette_value).then();
 				THIS.redraw();
 			})
 			psw.appendChild(psc);

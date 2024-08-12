@@ -21,6 +21,7 @@ JSCOLOR_PATH = ASSETS_PATH / 'jscolor.js'
 BOOTSTRAP_JS_PATH = ASSETS_PATH / 'bootstrap.bundle.min.js'
 BOOTSTRAP_CSS_PATH = ASSETS_PATH / 'bootstrap.min.css'
 ICONS_PATH = ASSETS_PATH / 'icons'
+LOCAL_FORAGE = ASSETS_PATH / 'localforage.min.js'
 
 ABOUT = f"""
 <p>HTML overlay generated with <a href="https://github.com/kha-white/mokuro" target="_blank">mokuro</a> version {__version__}</p>
@@ -159,6 +160,8 @@ class OverlayGenerator:
                 
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>')
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
+                with tag('script'):
+                    doc.asis(LOCAL_FORAGE.read_text())
                 with tag('script'):
                     doc.asis(JSCOLOR_PATH.read_text())
                 if as_one_file:
@@ -311,7 +314,7 @@ class OverlayGenerator:
                             with tag('span', klass='btn btn-outline-light btn-sm float-right', onclick=f"dragTextBox(this.closest('.textBox'));"):
                                 text('✥')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm', onclick='toggleTextBoxControls(this.closest(".textBox").querySelector(".textBox-btn-container"));'):
+                            with tag('span', klass='btn btn-outline-light btn-sm', onclick='toggleTextBoxControls(this.closest(".textBox"));'):
                                 text('m')
                     with tag('div', klass="textBox-btn-container"):
                         with tag('div', klass="d-inline-block"):

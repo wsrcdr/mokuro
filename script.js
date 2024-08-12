@@ -13,7 +13,7 @@ let defaultState = {
     r2l: false,
     singlePageView: true,
     displayOCR: true,
-    fontSize: 20,
+    fontSize: 14,
     defaultZoomMode: "fit to screen",
     toggleOCRTextBoxes: true,
     showAllTextBoxes: false,
@@ -34,11 +34,11 @@ let currentTextBoxStyle = null;
 
 function saveState() {
     state.draggingTextBox = null;
-    localStorage.setItem(storageKey, JSON.stringify(state));
+    localforage.setItem(storageKey, JSON.stringify(state));
 }
 
-function loadState() {
-    let newState = localStorage.getItem(storageKey)
+async function loadState() {
+    let newState = await localforage.getItem(storageKey)
 
     if (newState !== null) {
         state = JSON.parse(newState);
@@ -63,18 +63,14 @@ function updateUI() {
     document.getElementById('menuTextBoxTextColor').value = state.textBoxTextColor;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    replaceOldStorageKey();
-    loadState();
-    currentPageObjects.currentPage = getCurrentPage();
+document.addEventListener('DOMContentLoaded', async function () {
+    await loadState();
     let transferingData = sessionStorage.getItem("transferingData");
     if (transferingData) {
-        transferTextBoxTextFromStorage();
-    } else {
-        loadPageFromStorage(state.page_idx);
+        await transferTextBoxTextFromStorage();
     }
+    currentPageObjects.currentPage = getCurrentPage();
     num_pages = document.getElementsByClassName("page").length;
-
     pz = panzoom(pc, {
         bounds: true,
         boundsPadding: 0.05,
@@ -109,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-    updatePage(state.page_idx);
+    await updatePage(state.page_idx);
     initTextBoxes();
 
     if (showAboutOnStart) {
@@ -120,12 +116,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // add hidden element to hold text selection
     document.getElementById("pagesContainer").innerHTML += `<p id="selectionContainer" style="display:none;"></p>`;
 
-    afterInitialLoadFinish();
+    await afterInitialLoadFinish();
 }, false);
 
-function afterInitialLoadFinish() {
+async function afterInitialLoadFinish() {
     let default_palette = '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
-    let storage_palette = localStorage.getItem(getStorageBaseKey()+"_jscolor_palette");
+    let storage_palette = await localforage.getItem(getStorageBaseKey()+"_jscolor_palette");
     jscolor.presets.default = {
         palette: storage_palette || default_palette,
         paletteCols: 10,
@@ -140,13 +136,25 @@ function afterInitialLoadFinish() {
     for(let i=0;i<ids.length;i++){
         let el = document.getElementById(ids[i].id);
         el.setAttribute("type", "text");
-        el.setAttribute("onchange", `${ids[i].target}=this.value;saveState();updateProperties();`);
+        el.setAttribute("onchange", `${ids[i].target}=this.value;saveState();handleMenuInputChange('${ids[i].target}');`);
         el.setAttribute("size", "8");
         let opts = {value: el.getAttribute("value")};
         new JSColor(el, opts);
     }
 
     jscolor.install();
+    setAllTextBoxesFontSize();
+    setAllTextBoxesBg();
+    setAllTextBoxesTextColor();
+}
+
+function handleMenuInputChange(target){
+    if(target === 'state.textBoxBgColor'){
+        setAllTextBoxesBg();
+    }
+    if(target === 'state.textBoxTextColor'){
+        setAllTextBoxesTextColor();
+    }
 }
 
 function disablePanzoomOnElement(element) {
@@ -306,7 +314,7 @@ function createEmptyTextBox(page_idx, e){
     }
     let fontSize = state.fontSize;
     if(fontSize === 'auto'){
-        fontSize = 20;
+        fontSize = 14;
     }
     div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
     div.innerHTML = `\
@@ -318,7 +326,7 @@ function createEmptyTextBox(page_idx, e){
                 <span class="btn btn-outline-light btn-sm float-right m-1" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
             </div>\
             <div style="display:inline-block;">\
-                <span class="btn btn-outline-light btn-sm m-1" onclick="toggleTextBoxControls(this.closest('.textBox').querySelector('.textBox-btn-container'));">m</span>\
+                <span class="btn btn-outline-light btn-sm m-1" onclick="toggleTextBoxControls(this.closest('.textBox'));">m</span>\
             </div>
         </div>\
         <div class="textBox-btn-container">\
@@ -329,8 +337,7 @@ function createEmptyTextBox(page_idx, e){
                 <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
             </div>
             <div class="d-inline-block">
-            <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div>
-            <div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
+                <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div><div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
             </div>
             <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
             <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
@@ -365,6 +372,20 @@ function setAllTextBoxesFontSize(){
     let textboxes = pc.querySelectorAll('.textBox');
     for(let i=0;i<textboxes.length;i++){
         setTextBoxFontSize(textboxes[i], state.fontSize);
+    }
+}
+
+function setAllTextBoxesBg(){
+    let textboxes = pc.querySelectorAll('.textBox');
+    for(let i=0;i<textboxes.length;i++){
+        textboxes[i].style.background = state.textBoxBgColor;
+    }
+}
+
+function setAllTextBoxesTextColor(){
+    let textboxes = pc.querySelectorAll('.textBox');
+    for(let i=0;i<textboxes.length;i++){
+        textboxes[i].querySelector('.textBoxContent').style.color = state.textBoxTextColor;
     }
 }
 
@@ -412,13 +433,6 @@ function updateProperties() {
         r.style.setProperty('--colorBackground', state.backgroundColor)
     }
 
-    if (state.textBoxBgColor) {
-        r.style.setProperty('--textBoxBgColor', state.textBoxBgColor)
-    }
-    if (state.textBoxTextColor) {
-        r.style.setProperty('--textBoxTextColor', state.textBoxTextColor)
-    }
-
     if (state.showAllTextBoxes) {
         showAllTextBoxes();
     } else {
@@ -430,7 +444,7 @@ function saveCurrentPage() {
     console.log("Saving current page...");
     let page = getCurrentPage();
     let key = getStorageBaseKey() + "_" + page.id;
-    localStorage.setItem(key, page.innerHTML);
+    localforage.setItem(key, page.innerHTML);
     pushNotify('Saving page', 'Saved current page in storage');
 }
 
@@ -438,25 +452,25 @@ function savePage(page_idx) {
     console.log("Saving page ", page_idx);
     let page = getPage(page_idx);
     let key = getStorageBaseKey() + "_" + page.id;
-    localStorage.setItem(key, page.innerHTML);
+    localforage.setItem(key, page.innerHTML);
 }
 
-document.getElementById('menuR2l').addEventListener('click', function () {
+document.getElementById('menuR2l').addEventListener('click', async function () {
     state.r2l = document.getElementById("menuR2l").checked;
     saveState();
-    updatePage(state.page_idx);
+    await updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuDoublePageView').addEventListener('click', function () {
+document.getElementById('menuDoublePageView').addEventListener('click', async function () {
     state.singlePageView = !document.getElementById("menuDoublePageView").checked;
     saveState();
-    updatePage(state.page_idx);
+    await updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuHasCover').addEventListener('click', function () {
+document.getElementById('menuHasCover').addEventListener('click', async function () {
     state.hasCover = document.getElementById("menuHasCover").checked;
     saveState();
-    updatePage(state.page_idx);
+    await updatePage(state.page_idx);
 }, false);
 
 document.getElementById('menuDisplayOCR').addEventListener('click', function () {
@@ -494,20 +508,20 @@ document.getElementById('menuAbout').addEventListener('click', function () {
     pz.pause();
 }, false);
 
-document.getElementById('menuReset').addEventListener('click', function () {
+document.getElementById('menuReset').addEventListener('click', async function () {
     let page_idx = state.page_idx;
     state = JSON.parse(JSON.stringify(defaultState));
     updateUI();
-    updatePage(page_idx);
+    await updatePage(page_idx);
     updateProperties();
 }, false);
 
 document.getElementById('menuResetStorage').addEventListener('click', function () {
-    resetLocalStorage();
+    resetlocalforage();
 }, false);
 
 document.getElementById('menuResetCurrentPage').addEventListener('click', function () {
-    localStorage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
+    localforage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
     window.location.reload();
 }, false);
 
@@ -545,8 +559,8 @@ document.getElementById('menuDefaultZoom').addEventListener('change', (e) => {
 });
 
 
-document.getElementById('pageIdxInput').addEventListener('change', (e) => {
-    updatePage(e.target.value - 1);
+document.getElementById('pageIdxInput').addEventListener('change', async (e) => {
+    await updatePage(e.target.value - 1);
 })
 
 document.getElementById('buttonHideMenu').addEventListener('click', function () {
@@ -688,7 +702,7 @@ function zoomDefault() {
     }
 }
 
-function updatePage(new_page_idx) {
+async function updatePage(new_page_idx) {
     new_page_idx = Math.min(Math.max(new_page_idx, 0), num_pages - 1);
 
     getCurrentPage().style.display = "none";
@@ -705,7 +719,7 @@ function updatePage(new_page_idx) {
     }
 
     // update current page objects
-    loadPageFromStorage(new_page_idx);
+    await loadPageFromStorage(new_page_idx);
     currentPageObjects.currentPage = getCurrentPage();
     currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
     currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
@@ -737,51 +751,51 @@ function updatePage(new_page_idx) {
     zoomDefault();
 }
 
-function firstPage() {
-    updatePage(0);
+async function firstPage() {
+    await updatePage(0);
 }
 
-function lastPage() {
-    updatePage(num_pages - 1);
+async function lastPage() {
+    await updatePage(num_pages - 1);
 }
 
-function prevPage() {
-    updatePage(state.page_idx - (state.singlePageView ? 1 : 2));
+async function prevPage() {
+    await updatePage(state.page_idx - (state.singlePageView ? 1 : 2));
 }
 
-function nextPage() {
-    updatePage(state.page_idx + (state.singlePageView ? 1 : 2));
+async function nextPage() {
+    await updatePage(state.page_idx + (state.singlePageView ? 1 : 2));
 }
 
-function inputLeftLeft() {
+async function inputLeftLeft() {
     if (state.r2l) {
-        lastPage();
+        await lastPage();
     } else {
-        firstPage();
+        await firstPage();
     }
 }
 
-function inputLeft() {
+async function inputLeft() {
     if (state.r2l) {
-        nextPage();
+        await nextPage();
     } else {
-        prevPage();
+        await prevPage();
     }
 }
 
-function inputRight() {
+async function inputRight() {
     if (state.r2l) {
-        prevPage();
+        await prevPage();
     } else {
-        nextPage();
+        await nextPage();
     }
 }
 
-function inputRightRight() {
+async function inputRightRight() {
     if (state.r2l) {
-        firstPage();
+        await firstPage();
     } else {
-        lastPage();
+        await lastPage();
     }
 }
 
@@ -811,22 +825,10 @@ function getStorageBaseKey(){
     return key.slice(key.indexOf("hentai"));
 }
 
-function replaceOldStorageKey(){
-    let base_key = getStorageBaseKey();
-    for(let i=0;i<localStorage.length;i++){
-        let k = localStorage.key(i);
-        if(!k.startsWith(base_key) && k.includes(base_key)){
-            let v = localStorage.getItem(k);
-            let new_key = k.slice(k.indexOf(base_key));
-            localStorage.setItem(new_key, v);
-            localStorage.removeItem(k);
-        }
-    }
-}
 
-function loadPageFromStorage(page_idx) {
+async function loadPageFromStorage(page_idx) {
     let key = getStorageBaseKey() + "_" + "page" + page_idx;
-    let value = localStorage.getItem(key);
+    let value = await localforage.getItem(key);
     if (value) {
         document.getElementById("page" + page_idx).innerHTML = value;
         jscolor.install();
@@ -895,7 +897,8 @@ function editTextBox(tb) {
     }
 }
 
-function toggleTextBoxControls(el) {
+function toggleTextBoxControls(tb) {
+    let el = tb.querySelector('.textBox-btn-container');
     if (el.style.display != "flex") {
         el.style.display = "flex";
         el.style.flexWrap = "wrap";
@@ -905,11 +908,12 @@ function toggleTextBoxControls(el) {
     }
 }
 
-function startTextTransferFromStorage() {
+async function startTextTransferFromStorage() {
     let start_transfer = false;
     let key_template = getStorageBaseKey() + "_" + "page";
-    for(let i=0;i<localStorage.length;i++){
-        let key = localStorage.key(i);
+    let keys = await localforage.keys();
+    for(let i=0;i<keys.length;i++){
+        let key = keys[i];
         if(key.includes(key_template)){
             start_transfer = true;
             break;
@@ -923,19 +927,20 @@ function startTextTransferFromStorage() {
     }
 }
 
-function transferTextBoxTextFromStorage() {
+async function transferTextBoxTextFromStorage() {
     sessionStorage.removeItem('transferingData');
     let page_keys = [];
     let key_template = getStorageBaseKey() + "_" + "page";
-    for(let i=0;i<localStorage.length;i++){
-        let key = localStorage.key(i);
+    let keys = await localforage.keys();
+    for(let i=0;i<keys.length;i++){
+        let key = keys[i];
         if(key.includes(key_template)){
             page_keys.push(key);
         }
     }
     for(let i=0;i<page_keys.length;i++){
         console.log("Doing transfer for ", page_keys[i]);
-        let storageData = localStorage.getItem(page_keys[i]);
+        let storageData = await localforage.getItem(page_keys[i]);
         if (storageData) {
             console.log("has storage");
             let page_key_aux = page_keys[i].split("_");
@@ -948,26 +953,23 @@ function transferTextBoxTextFromStorage() {
             let container = document.createElement("div");
             container.id = "transferDataTempContainer";
             container.innerHTML = storageData;
+            jscolor.install();
             let storageTextboxes = container.querySelectorAll('.textBoxContent');
             console.log("Page textboxes: ", pageTextboxes);
             console.log("Storage textboxes: ", storageTextboxes);
             for (let i = 0; i < storageTextboxes.length; i++) {
                 let tb = storageTextboxes[i];
+                let storage_tb = tb.closest('.textBox');
                 // textbox id exists both in storage and original html
                 if (data[tb.id]) {
-                    data[tb.id].innerHTML = tb.innerHTML;
-                    data[tb.id].setAttribute("style", tb.getAttribute("style"));
-                    data[tb.id].closest('.textBox').setAttribute("style", tb.closest('.textBox').getAttribute("style"));
+                    let target_tb = data[tb.id].closest('.textBox');
+                    replicateTextBox(storage_tb, target_tb);
                 // it's a new textbox
                 } else {
-                    let storage_tb = tb.closest('.textBox');
                     // create an empty textbox
                     let ntb = createEmptyTextBox(page_idx, null);
-                    // copy style
-                    ntb.setAttribute("style", storage_tb.getAttribute("style"));
-                    ntb.querySelector('.textBoxContent').setAttribute("style", storage_tb.querySelector('.textBoxContent').getAttribute("style"));
-                    // edit the content
-                    ntb.querySelector('.textBoxContent').innerHTML = tb.innerHTML;
+                    replicateTextBox(storage_tb, ntb);
+                    // add to page
                     getPage(page_idx).querySelector(".pageContainer").appendChild(ntb);
                 }
             }
@@ -975,6 +977,24 @@ function transferTextBoxTextFromStorage() {
             savePage(page_idx);
         }
     }
+}
+
+/** Receives 2 TextBoxes, copies everything relevant from the original textbox to the new one. */
+function replicateTextBox(og, target){
+    // content
+    original_content = og.querySelector('.textBoxContent');
+    target_content = target.querySelector('.textBoxContent');
+    target_content.innerHTML = original_content.innerHTML;
+    target_content.style.writingMode = original_content.style.writingMode;
+    // apply style
+    copyTextBoxStyle(og);
+    pasteTextBoxStyle(target);
+    target.style.fontSize = og.style.fontSize;
+    // position
+    target.style.top = og.style.top;
+    target.style.left = og.style.left;
+    target.style.width = og.style.width;
+    target.style.height = og.style.height;
 }
 
 function randomIdGenerator() {
@@ -988,16 +1008,17 @@ function dragTextBox(tb) {
     state.draggingTextBox = tb;
 }
 
-function resetLocalStorage(){
+async function resetlocalforage(){
     let keys = [];
-    for(let i=0;i<localStorage.length;i++){
-        let key = localStorage.key(i);
+    let storageKeys = await localforage.keys();
+    for(let i=0;i<storageKeys.length;i++){
+        let key = storageKeys[i];
         if(key.includes(getStorageBaseKey())){
             keys.push(key);
         }
     }
     for(let a=0;a<keys.length;a++){
-        localStorage.removeItem(keys[a]);
+        await localforage.removeItem(keys[a]);
     }
     state = JSON.parse(JSON.stringify(defaultState));
     saveState();
@@ -1057,8 +1078,18 @@ function pasteTextBoxStyle(tb){
 
         // update inputs
         let controls = tb.querySelector('.textBox-btn-container');
-        controls.querySelector('.bg-color-input').jscolor.fromString(currentTextBoxStyle.bg);
-        controls.querySelector('.text-color-input').jscolor.fromString(currentTextBoxStyle.textColor);
+        let bg_input = controls.querySelector('.bg-color-input');
+        let text_input = controls.querySelector('.text-color-input');
+        if(!bg_input.jscolor){
+            new JSColor(bg_input).fromString(currentTextBoxStyle.bg);
+        }else{
+            bg_input.jscolor.fromString(currentTextBoxStyle.bg);
+        }
+        if(!text_input.jscolor){
+            new JSColor(text_input).fromString(currentTextBoxStyle.textColor);
+        }else{
+            text_input.jscolor.fromString(currentTextBoxStyle.textColor);
+        }
     }
 }
 
