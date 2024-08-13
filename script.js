@@ -1066,10 +1066,11 @@ function removeTextBox(tb){
 }
 
 class TextBoxStyle{
-    constructor(bg, textColor, glow){
+    constructor(bg, textColor, glow, fontFamily){
         this.bg = bg;
         this.textColor = textColor;
         this.glow = glow;
+        this.fontFamily = fontFamily;
     }
 }
 
@@ -1087,7 +1088,8 @@ function copyTextBoxStyle(tb){
     if(content.classList.contains("white-stroke")){
         glow = "white-stroke";
     }
-    currentTextBoxStyle = new TextBoxStyle(bg, textColor, glow);
+    let fontFamily = content.style.fontFamily;
+    currentTextBoxStyle = new TextBoxStyle(bg, textColor, glow, fontFamily);
 }
 
 function pasteTextBoxStyle(tb){
@@ -1101,7 +1103,7 @@ function pasteTextBoxStyle(tb){
         content.classList.remove('thin-black-stroke');
         content.classList.remove('white-stroke');
         content.classList.add(currentTextBoxStyle.glow);
-
+        content.style.fontFamily = currentTextBoxStyle.fontFamily;
         // update inputs
         let controls = tb.querySelector('.textBox-btn-container');
         let bg_input = controls.querySelector('.bg-color-input');
