@@ -82,6 +82,7 @@ body {
     line-height: 1.1em;
     margin: 0;
     white-space: pre-wrap;
+    font-family: inherit;
 }
 
 .force-open {
@@ -385,4 +386,8 @@ input[type=number] {
     font-family: sans-serif;
     text-align: center;
     cursor: pointer;
+}
+
+select.btn {
+    text-align: start;
 }

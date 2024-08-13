@@ -302,6 +302,19 @@ function initTextBoxes() {
 }
 
 function createEmptyTextBox(page_idx, e){
+    let fonts = [
+        "Noto Sans JP, Meiryo, MS Gothic, sans-serif",
+        "East Sea Dokdo",
+        "Yuji Boku",
+        "Nanum Brush Script",
+        "Nanum Pen Script"
+    ];
+    let font_picker_html = `<select class="btn btn-outline-light btn-sm m-1 font-family-input" onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);">`;
+    fonts.forEach((el) => {
+        font_picker_html += `<option>${el}</option>`;
+    });
+    font_picker_html += "</select>";
+
     let div = document.createElement("div");
     div.classList.add("textBox", "hovered");
     let id = randomIdGenerator();
@@ -342,6 +355,7 @@ function createEmptyTextBox(page_idx, e){
             <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest('.textBox'),this.value);"></input>\
             <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest('.textBox'),this.value);"></input>\
             <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
+            ${font_picker_html}
         </div>\
         <div class="textBoxContent thin-black-stroke">\
             <p></p>\
@@ -369,9 +383,11 @@ function hideAllTextBoxes() {
 }
 
 function setAllTextBoxesFontSize(){
-    let textboxes = pc.querySelectorAll('.textBox');
-    for(let i=0;i<textboxes.length;i++){
-        setTextBoxFontSize(textboxes[i], state.fontSize);
+    if(state.fontSize !== "auto"){
+        let textboxes = pc.querySelectorAll('.textBox');
+        for(let i=0;i<textboxes.length;i++){
+            setTextBoxFontSize(textboxes[i], state.fontSize);
+        }
     }
 }
 
@@ -902,7 +918,7 @@ function editTextBox(tb) {
         let width = tb.getBoundingClientRect().width;
         let height = container.getBoundingClientRect().height;
         // update html with textarea
-        let ta = `<textarea style="width:${width};height:${height};font-size:${tb.style.fontSize};">${content}</textarea>`;
+        let ta = `<textarea style="width:${width};height:${height};font-size:${tb.style.fontSize};resize:both;">${content}</textarea>`;
         container.innerHTML = ta;
     }
 }
@@ -1138,4 +1154,8 @@ function setTextBoxTextColor(tb, color){
         tbc.classList.add('white-stroke');
          tbc.classList.remove('thin-black-stroke'); 
     }
+}
+
+function setTextBoxFontFamily(tb, value){
+    tb.querySelector('.textBoxContent').style.fontFamily = value;
 }

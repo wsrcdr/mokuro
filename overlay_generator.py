@@ -113,6 +113,7 @@ class OverlayGenerator:
         with tag('html'):
             doc.asis('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.css" />')
             doc.asis('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">')
+            doc.asis('<link href="https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Nanum+Brush+Script&family=Nanum+Pen+Script&family=Yuji+Boku&display=swap" rel="stylesheet">')
             doc.asis('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
             doc.asis('<meta content="utf-8" http-equiv="encoding">')
             doc.asis(
@@ -302,6 +303,13 @@ class OverlayGenerator:
 
         with tag('div', klass='pageContainer', style=self.get_container_style(result, quote(str(img_path.as_posix())))):
             block_count = 0
+            fonts = [
+                "Noto Sans JP, Meiryo, MS Gothic, sans-serif",
+                "East Sea Dokdo",
+                "Yuji Boku",
+                "Nanum Brush Script",
+                "Nanum Pen Script"
+            ]
             for result_blk, z_index in zip(result['blocks'], z_idxs):
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
@@ -336,6 +344,10 @@ class OverlayGenerator:
                         doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest(\'.textBox\'),this.value);"></input>')
                         with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
                             pass
+                        with tag('select', klass="btn btn-outline-light btn-sm m-1 font-family-input", onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);"):
+                            for font in fonts:
+                                doc.asis(f'<option>{font}</option>')
+                        
 
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
