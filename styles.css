@@ -1,6 +1,6 @@
 :root {
     --textBoxDisplay: flex;
-    --textBoxBorderHoverColor: rgba(237, 28, 36, 0.5);
+    --textBoxBorderHoverColor: white;
     --textBoxFontSize: 1em;
     --textBoxBgColor: #363839e8;
     --textBoxTextColor: #e8e6e3;
@@ -9,7 +9,6 @@
     --color2: #e2e2e9;
     --color3: #071013;
     --color3a: rgba(7, 16, 19, 0.3);
-
 }
 
 body {
@@ -46,8 +45,7 @@ body {
     overflow: auto;
     flex-direction: column;
     align-items: stretch;
-    opacity: 0;
-    
+    opacity: 0;   
 }
 
 .black-stroke {
@@ -64,7 +62,7 @@ body {
 
 .textBox:hover {
     background: var(--textBoxBgColor);
-    border: 2px solid rgba(255, 255, 255);
+    border: 2px solid var(--textBoxBorderHoverColor);
     z-index: 999 !important;
     opacity: 1;
 }
@@ -88,21 +86,21 @@ body {
 
 .force-open {
     background: var(--textBoxBgColor);
-    border: 2px solid rgba(255, 255, 255);
+    border: 2px solid var(--textBoxBorderHoverColor);
     z-index: 999 !important;
     opacity: 1;
 }
 
 .hovered {
     background: var(--textBoxBgColor);
-    border: 2px solid rgba(255, 255, 255);
+    border: 2px solid var(--textBoxBorderHoverColor);
     z-index: 999 !important;
     opacity: 1;
 }
 
 .doubleHovered {
     background: var(--textBoxBgColor);
-    border: 2px solid rgba(255, 255, 255);
+    border: 2px solid var(--textBoxBorderHoverColor);
     z-index: 999 !important;
     opacity: 1;
 }

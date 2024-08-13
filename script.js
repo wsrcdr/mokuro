@@ -375,10 +375,33 @@ function setAllTextBoxesFontSize(){
     }
 }
 
+function isColorLight(color){
+    const hex = color.replace('#', '');
+    const c_r = parseInt(hex.substr(0, 2), 16);
+    const c_g = parseInt(hex.substr(2, 2), 16);
+    const c_b = parseInt(hex.substr(4, 2), 16);
+    const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+    return brightness > 155;
+}
+
 function setAllTextBoxesBg(){
     let textboxes = pc.querySelectorAll('.textBox');
+    let newColor = state.textBoxBgColor;
+    console.log("New textbox bg: ", newColor);
+    let mode = "dark";
+    if(isColorLight(newColor)){
+        mode = "light";
+        r.style.setProperty('--textBoxBorderHoverColor', 'black');
+    }else{
+        r.style.setProperty('--textBoxBorderHoverColor', 'white');
+    }
     for(let i=0;i<textboxes.length;i++){
         textboxes[i].style.background = state.textBoxBgColor;
+        if(mode == "dark"){
+            new TextBox(textboxes[i]).applyDarkMode();
+        }else{
+            new TextBox(textboxes[i]).applyLightMode();
+        }
     }
 }
 
@@ -420,8 +443,6 @@ function updateProperties() {
         currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
         currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
     }
-    
-    r.style.setProperty('--textBoxBorderHoverColor', 'rgba(0, 0, 0, 0)');
 
     if (state.displayOCR) {
         r.style.setProperty('--textBoxDisplay', 'flex');
@@ -891,8 +912,10 @@ function editTextBox(tb) {
         tb.setAttribute("data-width", tb.style.width);
         // get content
         let content = container.innerHTML.replace("<p>", "").replace("</p>", "").trim();
+        let width = tb.getBoundingClientRect().width;
+        let height = container.getBoundingClientRect().height;
         // update html with textarea
-        let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};">${content}</textarea>`;
+        let ta = `<textarea style="width:${width};height:${height};font-size:${tb.style.fontSize};">${content}</textarea>`;
         container.innerHTML = ta;
     }
 }
@@ -1044,6 +1067,26 @@ class TextBoxStyle{
         this.bg = bg;
         this.textColor = textColor;
         this.glow = glow;
+    }
+}
+
+class TextBox{
+    constructor(el){
+        this.tb = el;
+    }
+
+    applyDarkMode(){
+        this.tb.querySelectorAll('.btn').forEach(el => {
+            el.classList.remove("btn-outline-dark");
+            el.classList.add("btn-outline-light");
+        });
+    }
+
+    applyLightMode(){
+        this.tb.querySelectorAll('.btn').forEach(el => {
+            el.classList.add("btn-outline-dark");
+            el.classList.remove("btn-outline-light");
+        });
     }
 }
 
