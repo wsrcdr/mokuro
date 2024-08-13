@@ -332,8 +332,8 @@ class OverlayGenerator:
                                 text('✂️')
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"pasteTextBoxStyle(this.closest('.textBox'));"):
                                 text('📋')
-                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest(\'.textBox\').style.background=this.value;"></input>')
-                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest(\'.textBox\').querySelector(\'.textBoxContent\').style.color=this.value;"></input>')
+                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest(\'.textBox\'),this.value);"></input>')
+                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest(\'.textBox\'),this.value);"></input>')
                         with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
                             pass
 
@@ -341,7 +341,7 @@ class OverlayGenerator:
                     contentStyle = ''
                     if result_blk['vertical']:
                         contentStyle='writing-mode: vertical-rl;'
-                    with tag('div', klass='textBoxContent black-stroke', style=contentStyle, id=f"{id}_box{block_count}_content"):
+                    with tag('div', klass='textBoxContent thin-black-stroke', style=contentStyle, id=f"{id}_box{block_count}_content"):
                         with tag('p'):
                             text(content)
                         '''

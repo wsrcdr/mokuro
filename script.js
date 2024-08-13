@@ -339,11 +339,11 @@ function createEmptyTextBox(page_idx, e){
             <div class="d-inline-block">
                 <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div><div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
             </div>
-            <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="this.closest('.textBox').style.background=this.value;"></input>\
-            <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="this.closest('.textBox').querySelector('.textBoxContent').style.color=this.value;"></input>\
+            <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest('.textBox'),this.value);"></input>\
+            <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest('.textBox'),this.value);"></input>\
             <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
         </div>\
-        <div class="textBoxContent black-stroke">\
+        <div class="textBoxContent thin-black-stroke">\
             <p></p>\
         </div>\
     </div>`;
@@ -387,28 +387,15 @@ function isColorLight(color){
 function setAllTextBoxesBg(){
     let textboxes = pc.querySelectorAll('.textBox');
     let newColor = state.textBoxBgColor;
-    console.log("New textbox bg: ", newColor);
-    let mode = "dark";
-    if(isColorLight(newColor)){
-        mode = "light";
-        r.style.setProperty('--textBoxBorderHoverColor', 'black');
-    }else{
-        r.style.setProperty('--textBoxBorderHoverColor', 'white');
-    }
     for(let i=0;i<textboxes.length;i++){
-        textboxes[i].style.background = state.textBoxBgColor;
-        if(mode == "dark"){
-            new TextBox(textboxes[i]).applyDarkMode();
-        }else{
-            new TextBox(textboxes[i]).applyLightMode();
-        }
+        setTextBoxBg(textboxes[i], newColor);
     }
 }
 
 function setAllTextBoxesTextColor(){
     let textboxes = pc.querySelectorAll('.textBox');
     for(let i=0;i<textboxes.length;i++){
-        textboxes[i].querySelector('.textBoxContent').style.color = state.textBoxTextColor;
+        setTextBoxTextColor(textboxes[i],state.textBoxTextColor);
     }
 }
 
@@ -1051,9 +1038,9 @@ async function resetlocalforage(){
 function toggleStroke(el){
     if (el.classList.contains("white-stroke")){
         el.classList.remove("white-stroke");
-        el.classList.add("black-stroke");
+        el.classList.add("thin-black-stroke");
     }else{
-        el.classList.remove("black-stroke");
+        el.classList.remove("thin-black-stroke");
         el.classList.add("white-stroke");
     }
 }
@@ -1070,26 +1057,6 @@ class TextBoxStyle{
     }
 }
 
-class TextBox{
-    constructor(el){
-        this.tb = el;
-    }
-
-    applyDarkMode(){
-        this.tb.querySelectorAll('.btn').forEach(el => {
-            el.classList.remove("btn-outline-dark");
-            el.classList.add("btn-outline-light");
-        });
-    }
-
-    applyLightMode(){
-        this.tb.querySelectorAll('.btn').forEach(el => {
-            el.classList.add("btn-outline-dark");
-            el.classList.remove("btn-outline-light");
-        });
-    }
-}
-
 function copyTextBoxStyle(tb){
     let content = tb.querySelector('.textBoxContent');
     let bg = tb.style.background;
@@ -1100,7 +1067,7 @@ function copyTextBoxStyle(tb){
     if(!textColor){
         textColor = state.textBoxTextColor;
     }
-    let glow = "black-stroke";
+    let glow = "thin-black-stroke";
     if(content.classList.contains("white-stroke")){
         glow = "white-stroke";
     }
@@ -1115,7 +1082,7 @@ function pasteTextBoxStyle(tb){
         tb.style.background = currentTextBoxStyle.bg;
         let content = tb.querySelector('.textBoxContent');
         content.style.color = currentTextBoxStyle.textColor;
-        content.classList.remove('black-stroke');
+        content.classList.remove('thin-black-stroke');
         content.classList.remove('white-stroke');
         content.classList.add(currentTextBoxStyle.glow);
 
@@ -1139,4 +1106,36 @@ function pasteTextBoxStyle(tb){
 function setTextBoxFontSize(tb, fontSize){
     tb.style.fontSize = fontSize + 'pt';
     tb.querySelector('.textBox-btn-container').querySelector('.font-size-input').setAttribute("value", fontSize);
+}
+
+function setTextBoxBg(tb, color){
+    tb.style.background = color;
+    // change controls colors
+    if(isColorLight(color)){
+        tb.querySelectorAll('.btn').forEach(el => {
+            el.classList.add("btn-outline-dark");
+            el.classList.remove("btn-outline-light");
+            el.color = "black";
+        });
+        tb.style.borderColor = "black";
+    }else{
+        tb.querySelectorAll('.btn').forEach(el => {
+            el.classList.remove("btn-outline-dark");
+            el.classList.add("btn-outline-light");
+            el.color = "white";
+        });
+        tb.style.borderColor = "white";
+    }
+}
+
+function setTextBoxTextColor(tb, color){
+    let tbc = tb.querySelector('.textBoxContent');
+    tbc.style.color = color;
+    if(isColorLight(color)){
+         tbc.classList.remove('white-stroke');
+         tbc.classList.add('thin-black-stroke'); 
+    }else{
+        tbc.classList.add('white-stroke');
+         tbc.classList.remove('thin-black-stroke'); 
+    }
 }
