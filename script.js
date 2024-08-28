@@ -31,6 +31,12 @@ let state = JSON.parse(JSON.stringify(defaultState));
 
 let currentPageObjects = { currentPage: null, textboxList: [], textboxContentList: [] };
 let currentTextBoxStyle = null;
+let customInput = null;
+// add custom input for color conversions
+customInput = document.createElement("input");
+customInput.id = "customInternalInput";
+customInput.style.display = "none";
+customInput = new JSColor(customInput, {});
 
 function saveState() {
     state.draggingTextBox = null;
@@ -141,7 +147,6 @@ async function afterInitialLoadFinish() {
         let opts = {value: el.getAttribute("value")};
         new JSColor(el, opts);
     }
-
     jscolor.install();
     setAllTextBoxesFontSize();
     setAllTextBoxesBg();
@@ -307,11 +312,16 @@ function createEmptyTextBox(page_idx, e){
         "East Sea Dokdo",
         "Yuji Boku",
         "Nanum Brush Script",
-        "Nanum Pen Script"
+        "Nanum Pen Script",
+        "Yomogi",
+        "Over the rainbow",
+        "Hi Melody",
+        "Mochiy Pop P One",
+        "Miltonian Tattoo"
     ];
     let font_picker_html = `<select class="btn btn-outline-light btn-sm m-1 font-family-input" onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);">`;
     fonts.forEach((el) => {
-        font_picker_html += `<option>${el}</option>`;
+        font_picker_html += `<option style="font-family:${el};">${el}</option>`;
     });
     font_picker_html += "</select>";
 
@@ -921,7 +931,10 @@ function editTextBox(tb) {
         let ta = `<textarea style="width:${width};height:${height};font-size:${tb.style.fontSize};resize:both;">${content}</textarea>`;
         container.innerHTML = ta;
         // select textarea
-        selectNode(container.querySelector("textarea"));
+        let taEl = container.querySelector("textarea");
+        taEl.scrollIntoView();
+        taEl.focus();
+        taEl.select();
     }
 }
 
@@ -988,9 +1001,11 @@ async function transferTextBoxTextFromStorage() {
             for (let i = 0; i < storageTextboxes.length; i++) {
                 let tb = storageTextboxes[i];
                 let storage_tb = tb.closest('.textBox');
+                console.log("Storage tb: ", storage_tb);
                 // textbox id exists both in storage and original html
                 if (data[tb.id]) {
                     let target_tb = data[tb.id].closest('.textBox');
+                    console.log("Target tb: ", target_tb);
                     replicateTextBox(storage_tb, target_tb);
                 // it's a new textbox
                 } else {
@@ -1068,10 +1083,10 @@ function removeTextBox(tb){
 }
 
 class TextBoxStyle{
-    constructor(bg, textColor, fontFamily, fontSize){
+    constructor(bg, textColor, fontFamilyIndex, fontSize){
         this.bg = bg;
         this.textColor = textColor;
-        this.fontFamily = fontFamily;
+        this.fontFamilyIndex = fontFamilyIndex;
         this.fontSize = fontSize;
     }
 }
@@ -1084,14 +1099,20 @@ function copyTextBoxStyle(tb){
     }
     let textColor = content.style.color;
     if(!textColor){
-        textColor = state.textBoxTextColor;
+        textColor = hexToRgb(state.textBoxTextColor);
     }
-    let fontFamily = content.style.fontFamily;
+    customInput.fromString(textColor);
+    textColor = customInput.toHEXString();
+    let font_family_input = tb.querySelector('.textBox-btn-container').querySelector('.font-family-input');
+    let fontFamilyIndex = -1;
+    if(font_family_input){
+        fontFamilyIndex = font_family_input.selectedIndex;
+    }
     let fontSize = tb.style.fontSize.replace("pt", "");
     if(!fontSize){
         fontSize = '14';
     }
-    currentTextBoxStyle = new TextBoxStyle(bg, textColor, fontFamily, fontSize);
+    currentTextBoxStyle = new TextBoxStyle(bg, textColor, fontFamilyIndex, fontSize);
 }
 
 function pasteTextBoxStyle(tb){
@@ -1099,14 +1120,11 @@ function pasteTextBoxStyle(tb){
         alert("You need to first copy a textbox style!");
     }
     else{
-        setTextBoxBg(tb, currentTextBoxStyle.bg);
-        setTextBoxTextColor(tb, currentTextBoxStyle.textColor);
-        setTextBoxFontFamily(tb, currentTextBoxStyle.fontFamily);
-        setTextBoxFontSize(tb, currentTextBoxStyle.fontSize);
         // update inputs
         let controls = tb.querySelector('.textBox-btn-container');
         let bg_input = controls.querySelector('.bg-color-input');
         let text_input = controls.querySelector('.text-color-input');
+        let font_family_input = controls.querySelector('.font-family-input');
         if(!bg_input.jscolor){
             new JSColor(bg_input).fromString(currentTextBoxStyle.bg);
         }else{
@@ -1117,6 +1135,15 @@ function pasteTextBoxStyle(tb){
         }else{
             text_input.jscolor.fromString(currentTextBoxStyle.textColor);
         }
+        if(font_family_input && currentTextBoxStyle.fontFamilyIndex != -1){
+            font_family_input.selectedIndex = currentTextBoxStyle.fontFamilyIndex;
+            let fontFamily = font_family_input.options[currentTextBoxStyle.fontFamilyIndex].value;
+            setTextBoxFontFamily(tb, fontFamily);
+        }
+        setTextBoxBg(tb, currentTextBoxStyle.bg);
+        setTextBoxTextColor(tb, currentTextBoxStyle.textColor);
+        setTextBoxFontSize(tb, currentTextBoxStyle.fontSize);
+        
     }
 }
 
@@ -1160,3 +1187,18 @@ function setTextBoxTextColor(tb, color){
 function setTextBoxFontFamily(tb, value){
     tb.querySelector('.textBoxContent').style.fontFamily = value;
 }
+
+function hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+      return r + r + g + g + b + b;
+    });
+  
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }

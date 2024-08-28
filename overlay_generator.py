@@ -77,6 +77,8 @@ class OverlayGenerator:
             shutil.copy(SCRIPT_PATH, out_dir / 'script.js')
             shutil.copy(STYLES_PATH, out_dir / 'styles.css')
             shutil.copy(PANZOOM_PATH, out_dir / 'panzoom.min.js')
+            shutil.copy(LOCAL_FORAGE, out_dir / 'localforage.min.js')
+            shutil.copy(JSCOLOR_PATH, out_dir / 'jscolor.js')
 
         img_paths = [p for p in path.glob('*') if p.is_file() and p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp')]
         img_paths = natsorted(img_paths)
@@ -161,20 +163,23 @@ class OverlayGenerator:
                 
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>')
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
-                with tag('script'):
-                    doc.asis(LOCAL_FORAGE.read_text())
-                with tag('script'):
-                    doc.asis(JSCOLOR_PATH.read_text())
+                
                 if as_one_file:
                     with tag('script'):
+                        doc.asis(LOCAL_FORAGE.read_text())
+                    with tag('script'):
+                        doc.asis(JSCOLOR_PATH.read_text())
+                    with tag('script'):
                         doc.asis(PANZOOM_PATH.read_text())
-
                     with tag('script'):
                         doc.asis(SCRIPT_PATH.read_text())
                 else:
+                    with tag('script', src='localforage.min.js'):
+                        pass
+                    with tag('script', src='jscolor.js'):
+                        pass
                     with tag('script', src='panzoom.min.js'):
                         pass
-
                     with tag('script', src='script.js'):
                         pass
 
