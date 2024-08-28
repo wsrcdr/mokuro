@@ -10,6 +10,11 @@
  */
 
 
+function getStorageBaseKey(){
+    let key = window.location.pathname;
+    return key.slice(key.indexOf("hentai"));
+}
+
 (function (global, factory) {
 
 	'use strict';
@@ -2864,7 +2869,7 @@ var jsc = {
 				for(let i=0;i<jsc.instances.length;i++){
 					jsc.instances[i].set__palette(palette_value);
 				}
-				let storageKey = window.location.pathname + "_jscolor_palette";
+				let storageKey = getStorageBaseKey() + "_jscolor_palette";
 				// save in storage
 				localforage.setItem(storageKey, palette_value).then();
 				THIS.redraw();

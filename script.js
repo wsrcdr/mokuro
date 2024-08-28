@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 }, false);
 
 async function afterInitialLoadFinish() {
-    let default_palette = '#F5F5F5,#212121,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
+    let default_palette = '#FFFFFFFF,#000000FF,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
     let storage_palette = await localforage.getItem(getStorageBaseKey()+"_jscolor_palette");
     jscolor.presets.default = {
         palette: storage_palette || default_palette,
@@ -275,7 +275,7 @@ function initTextBoxes() {
                         let contentNode = tb.querySelector('.textBoxContent');
                         selectNode(contentNode);
                         e.preventDefault();
-                        copyTextBoxContent(contentNode);
+                        //copyTextBoxContent(contentNode);
                     }
                     else {
                         tb.classList.add("hovered");
@@ -284,7 +284,7 @@ function initTextBoxes() {
                     // select and copy contents
                     let contentNode = tb.querySelector('.textBoxContent');
                     selectNode(contentNode);
-                    copyTextBoxContent(contentNode);
+                    // copyTextBoxContent(contentNode);
                 }
             }
             else {
@@ -303,7 +303,7 @@ function initTextBoxes() {
 
 function createEmptyTextBox(page_idx, e){
     let fonts = [
-        "Noto Sans JP, Meiryo, MS Gothic, sans-serif",
+        "Noto Sans JP",
         "East Sea Dokdo",
         "Yuji Boku",
         "Nanum Brush Script",
@@ -915,11 +915,13 @@ function editTextBox(tb) {
         tb.setAttribute("data-width", tb.style.width);
         // get content
         let content = container.innerHTML.replace("<p>", "").replace("</p>", "").trim();
-        let width = tb.getBoundingClientRect().width;
+        let width = tb.style.width;
         let height = container.getBoundingClientRect().height;
         // update html with textarea
         let ta = `<textarea style="width:${width};height:${height};font-size:${tb.style.fontSize};resize:both;">${content}</textarea>`;
         container.innerHTML = ta;
+        // select textarea
+        selectNode(container.querySelector("textarea"));
     }
 }
 
@@ -1066,11 +1068,11 @@ function removeTextBox(tb){
 }
 
 class TextBoxStyle{
-    constructor(bg, textColor, glow, fontFamily){
+    constructor(bg, textColor, fontFamily, fontSize){
         this.bg = bg;
         this.textColor = textColor;
-        this.glow = glow;
         this.fontFamily = fontFamily;
+        this.fontSize = fontSize;
     }
 }
 
@@ -1084,12 +1086,12 @@ function copyTextBoxStyle(tb){
     if(!textColor){
         textColor = state.textBoxTextColor;
     }
-    let glow = "thin-black-stroke";
-    if(content.classList.contains("white-stroke")){
-        glow = "white-stroke";
-    }
     let fontFamily = content.style.fontFamily;
-    currentTextBoxStyle = new TextBoxStyle(bg, textColor, glow, fontFamily);
+    let fontSize = tb.style.fontSize.replace("pt", "");
+    if(!fontSize){
+        fontSize = '14';
+    }
+    currentTextBoxStyle = new TextBoxStyle(bg, textColor, fontFamily, fontSize);
 }
 
 function pasteTextBoxStyle(tb){
@@ -1097,13 +1099,10 @@ function pasteTextBoxStyle(tb){
         alert("You need to first copy a textbox style!");
     }
     else{
-        tb.style.background = currentTextBoxStyle.bg;
-        let content = tb.querySelector('.textBoxContent');
-        content.style.color = currentTextBoxStyle.textColor;
-        content.classList.remove('thin-black-stroke');
-        content.classList.remove('white-stroke');
-        content.classList.add(currentTextBoxStyle.glow);
-        content.style.fontFamily = currentTextBoxStyle.fontFamily;
+        setTextBoxBg(tb, currentTextBoxStyle.bg);
+        setTextBoxTextColor(tb, currentTextBoxStyle.textColor);
+        setTextBoxFontFamily(tb, currentTextBoxStyle.fontFamily);
+        setTextBoxFontSize(tb, currentTextBoxStyle.fontSize);
         // update inputs
         let controls = tb.querySelector('.textBox-btn-container');
         let bg_input = controls.querySelector('.bg-color-input');

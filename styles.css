@@ -26,7 +26,7 @@ body {
 }
 
 .pageContainer * {
-    font-family: "Noto Sans JP", "Meiryo", "MS Gothic", sans-serif;
+    font-family: "Noto Sans JP";
 }
 
 .pageContainer {
@@ -390,4 +390,8 @@ input[type=number] {
 
 select.btn {
     text-align: start;
+}
+
+.textBoxContent * {
+    font-family: inherit;
 }

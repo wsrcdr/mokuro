@@ -113,7 +113,7 @@ class OverlayGenerator:
         with tag('html'):
             doc.asis('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.css" />')
             doc.asis('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">')
-            doc.asis('<link href="https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Nanum+Brush+Script&family=Nanum+Pen+Script&family=Yuji+Boku&display=swap" rel="stylesheet">')
+            doc.asis('<link href="https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Nanum+Brush+Script&family=Nanum+Pen+Script&family=Yuji+Boku&family=Noto+Sans+JP&family=Hi+Melody&family=Miltonian+Tattoo&family=Mochiy+Pop+P+One&family=Over+the+Rainbow&family=Yomogi&display=swap" rel="stylesheet">')
             doc.asis('<meta content="text/html;charset=utf-8" http-equiv="Content-Type">')
             doc.asis('<meta content="utf-8" http-equiv="encoding">')
             doc.asis(
@@ -304,11 +304,16 @@ class OverlayGenerator:
         with tag('div', klass='pageContainer', style=self.get_container_style(result, quote(str(img_path.as_posix())))):
             block_count = 0
             fonts = [
-                "Noto Sans JP, Meiryo, MS Gothic, sans-serif",
+                "Noto Sans JP",
                 "East Sea Dokdo",
                 "Yuji Boku",
                 "Nanum Brush Script",
-                "Nanum Pen Script"
+                "Nanum Pen Script",
+                "Yomogi",
+                "Over the rainbow",
+                "Hi Melody",
+                "Mochiy Pop P One",
+                "Miltonian Tattoo"
             ]
             for result_blk, z_index in zip(result['blocks'], z_idxs):
                 block_count += 1
@@ -346,7 +351,7 @@ class OverlayGenerator:
                             pass
                         with tag('select', klass="btn btn-outline-light btn-sm m-1 font-family-input", onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);"):
                             for font in fonts:
-                                doc.asis(f'<option>{font}</option>')
+                                doc.asis(f'<option style="font-family: {font};">{font}</option>')
                         
 
                     content = "\n".join(result_blk['lines'])
