@@ -808,7 +808,6 @@ var jsc = {
 		};
 
 		var m;
-
 		if (m = str.match(/^\W*([0-9A-F]{3,8})\W*$/i)) {
 			// HEX notation
 
@@ -2871,7 +2870,7 @@ var jsc = {
 				}
 				let storageKey = getStorageBaseKey() + "_jscolor_palette";
 				// save in storage
-				localforage.setItem(storageKey, palette_value).then();
+				customstorage.setItem(storageKey, palette_value).then();
 				THIS.redraw();
 			})
 			psw.appendChild(psc);

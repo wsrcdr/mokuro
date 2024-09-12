@@ -68,11 +68,12 @@ body {
 }
 
 .textBoxContent {
-    display: block;
+    display: flex;
     flex-grow: 1;
     align-self: center;
     align-content: center;
     padding: 0.1rem 0.25rem;
+    flex-wrap: wrap;
 }
 
 .textBoxContent p {

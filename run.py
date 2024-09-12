@@ -14,6 +14,7 @@ def run(*paths,
         as_one_file=True,
         disable_confirmation=False,
         disable_ocr=False,
+        for_server=False
         ):
     
     if disable_ocr:
@@ -47,7 +48,7 @@ def run(*paths,
     for i, path in enumerate(paths):
         logger.info(f'Processing {i + 1}/{len(paths)}: {path}')
         try:
-            ovg.process_dir(path, as_one_file=as_one_file)
+            ovg.process_dir(path, as_one_file=as_one_file, for_server=for_server)
         except Exception:
             logger.exception(f'Error while processing {path}')
         else:

@@ -4,6 +4,7 @@ let r = document.querySelector(':root');
 let pz;
 let showAboutOnStart = false;
 
+let customstorage = new CustomStorage(mokuro_base_storage_key);
 let storageKey = getStorageBaseKey() + "_mokuro_state";
 
 let defaultState = {
@@ -40,13 +41,13 @@ customInput = new JSColor(customInput, {});
 
 function saveState() {
     state.draggingTextBox = null;
-    localforage.setItem(storageKey, JSON.stringify(state));
+    customstorage.setItem(storageKey, JSON.stringify(state));
 }
 
 async function loadState() {
-    let newState = await localforage.getItem(storageKey)
+    let newState = await customstorage.getItem(storageKey)
 
-    if (newState !== null) {
+    if (newState) {
         state = JSON.parse(newState);
     }
 
@@ -127,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function afterInitialLoadFinish() {
     let default_palette = '#FFFFFFFF,#000000FF,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
-    let storage_palette = await localforage.getItem(getStorageBaseKey()+"_jscolor_palette");
+    let storage_palette = await customstorage.getItem(getStorageBaseKey()+"_jscolor_palette");
     jscolor.presets.default = {
         palette: storage_palette || default_palette,
         paletteCols: 10,
@@ -478,7 +479,7 @@ function saveCurrentPage() {
     console.log("Saving current page...");
     let page = getCurrentPage();
     let key = getStorageBaseKey() + "_" + page.id;
-    localforage.setItem(key, page.innerHTML);
+    customstorage.setItem(key, page.innerHTML);
     pushNotify('Saving page', 'Saved current page in storage');
 }
 
@@ -486,7 +487,7 @@ function savePage(page_idx) {
     console.log("Saving page ", page_idx);
     let page = getPage(page_idx);
     let key = getStorageBaseKey() + "_" + page.id;
-    localforage.setItem(key, page.innerHTML);
+    customstorage.setItem(key, page.innerHTML);
 }
 
 document.getElementById('menuR2l').addEventListener('click', async function () {
@@ -551,11 +552,11 @@ document.getElementById('menuReset').addEventListener('click', async function ()
 }, false);
 
 document.getElementById('menuResetStorage').addEventListener('click', function () {
-    resetlocalforage();
+    resetcustomstorage();
 }, false);
 
 document.getElementById('menuResetCurrentPage').addEventListener('click', function () {
-    localforage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
+    customstorage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
     window.location.reload();
 }, false);
 
@@ -848,21 +849,20 @@ function toggleFullScreen() {
 }
 
 document.addEventListener('copy', function (e) {
-    var text = window.getSelection().toString().replace(/[\n\r]+/g, ' ');
+    var text = window.getSelection().anchorNode.closest('.textBox').querySelector('.textBoxContent').textContent.replace(/[\n\r]+/g, ' ');
     e.clipboardData.setData('text/plain', text);
     e.preventDefault();
 });
 
-
 function getStorageBaseKey(){
-    let key = window.location.pathname;
-    return key.slice(key.indexOf("hentai"));
+    let key = mokuro_base_storage_key || window.location.pathname.slice(window.location.pathname.indexOf("hentai"));
+    return key;
 }
 
 
 async function loadPageFromStorage(page_idx) {
     let key = getStorageBaseKey() + "_" + "page" + page_idx;
-    let value = await localforage.getItem(key);
+    let value = await customstorage.getItem(key);
     if (value) {
         document.getElementById("page" + page_idx).innerHTML = value;
         jscolor.install();
@@ -952,7 +952,7 @@ function toggleTextBoxControls(tb) {
 async function startTextTransferFromStorage() {
     let start_transfer = false;
     let key_template = getStorageBaseKey() + "_" + "page";
-    let keys = await localforage.keys();
+    let keys = await customstorage.keys();
     for(let i=0;i<keys.length;i++){
         let key = keys[i];
         if(key.includes(key_template)){
@@ -972,7 +972,7 @@ async function transferTextBoxTextFromStorage() {
     sessionStorage.removeItem('transferingData');
     let page_keys = [];
     let key_template = getStorageBaseKey() + "_" + "page";
-    let keys = await localforage.keys();
+    let keys = await customstorage.keys();
     for(let i=0;i<keys.length;i++){
         let key = keys[i];
         if(key.includes(key_template)){
@@ -981,7 +981,7 @@ async function transferTextBoxTextFromStorage() {
     }
     for(let i=0;i<page_keys.length;i++){
         console.log("Doing transfer for ", page_keys[i]);
-        let storageData = await localforage.getItem(page_keys[i]);
+        let storageData = await customstorage.getItem(page_keys[i]);
         if (storageData) {
             console.log("has storage");
             let page_key_aux = page_keys[i].split("_");
@@ -1051,9 +1051,9 @@ function dragTextBox(tb) {
     state.draggingTextBox = tb;
 }
 
-async function resetlocalforage(){
+async function resetcustomstorage(){
     let keys = [];
-    let storageKeys = await localforage.keys();
+    let storageKeys = await customstorage.keys();
     for(let i=0;i<storageKeys.length;i++){
         let key = storageKeys[i];
         if(key.includes(getStorageBaseKey())){
@@ -1061,7 +1061,7 @@ async function resetlocalforage(){
         }
     }
     for(let a=0;a<keys.length;a++){
-        await localforage.removeItem(keys[a]);
+        await customstorage.removeItem(keys[a]);
     }
     state = JSON.parse(JSON.stringify(defaultState));
     saveState();
@@ -1097,9 +1097,11 @@ function copyTextBoxStyle(tb){
     if(!bg){
         bg = state.textBoxBgColor;
     }
+    customInput.fromString(bg);
+    bg = customInput.toHEXString();
     let textColor = content.style.color;
     if(!textColor){
-        textColor = hexToRgb(state.textBoxTextColor);
+        textColor = state.textBoxTextColor;
     }
     customInput.fromString(textColor);
     textColor = customInput.toHEXString();
@@ -1120,11 +1122,19 @@ function pasteTextBoxStyle(tb){
         alert("You need to first copy a textbox style!");
     }
     else{
-        // update inputs
         let controls = tb.querySelector('.textBox-btn-container');
+        let font_family_input = controls.querySelector('.font-family-input');
+        if(font_family_input && currentTextBoxStyle.fontFamilyIndex != -1){
+            font_family_input.selectedIndex = currentTextBoxStyle.fontFamilyIndex;
+            let fontFamily = font_family_input.options[currentTextBoxStyle.fontFamilyIndex].value;
+            setTextBoxFontFamily(tb, fontFamily);
+        }
+        setTextBoxBg(tb, currentTextBoxStyle.bg);
+        setTextBoxTextColor(tb, currentTextBoxStyle.textColor);
+        setTextBoxFontSize(tb, currentTextBoxStyle.fontSize);
+        // update inputs
         let bg_input = controls.querySelector('.bg-color-input');
         let text_input = controls.querySelector('.text-color-input');
-        let font_family_input = controls.querySelector('.font-family-input');
         if(!bg_input.jscolor){
             new JSColor(bg_input).fromString(currentTextBoxStyle.bg);
         }else{
@@ -1135,15 +1145,6 @@ function pasteTextBoxStyle(tb){
         }else{
             text_input.jscolor.fromString(currentTextBoxStyle.textColor);
         }
-        if(font_family_input && currentTextBoxStyle.fontFamilyIndex != -1){
-            font_family_input.selectedIndex = currentTextBoxStyle.fontFamilyIndex;
-            let fontFamily = font_family_input.options[currentTextBoxStyle.fontFamilyIndex].value;
-            setTextBoxFontFamily(tb, fontFamily);
-        }
-        setTextBoxBg(tb, currentTextBoxStyle.bg);
-        setTextBoxTextColor(tb, currentTextBoxStyle.textColor);
-        setTextBoxFontSize(tb, currentTextBoxStyle.fontSize);
-        
     }
 }
 
@@ -1195,10 +1196,11 @@ function hexToRgb(hex) {
       return r + r + g + g + b + b;
     });
   
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    result = {
       r: parseInt(result[1], 16),
       g: parseInt(result[2], 16),
       b: parseInt(result[3], 16)
-    } : null;
+    }
+    return `rgb(${r},${g},${b})`;
   }

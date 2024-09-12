@@ -11,7 +11,8 @@ from yattag import Doc
 from mokuro import __version__
 from mokuro.env import ASSETS_PATH
 from mokuro.manga_page_ocr import MangaPageOcr
-from mokuro.utils import dump_json, load_json
+from mokuro.utils import dump_json, load_json, get_manga_id
+import os
 
 SCRIPT_PATH = Path(__file__).parent / 'script.js'
 
@@ -22,6 +23,7 @@ BOOTSTRAP_JS_PATH = ASSETS_PATH / 'bootstrap.bundle.min.js'
 BOOTSTRAP_CSS_PATH = ASSETS_PATH / 'bootstrap.min.css'
 ICONS_PATH = ASSETS_PATH / 'icons'
 LOCAL_FORAGE = ASSETS_PATH / 'localforage.min.js'
+CUSTOM_STORAGE = ASSETS_PATH / 'customstorage.js'
 
 ABOUT = f"""
 <p>HTML overlay generated with <a href="https://github.com/kha-white/mokuro" target="_blank">mokuro</a> version {__version__}</p>
@@ -62,7 +64,7 @@ class OverlayGenerator:
         if self.mpocr is None:
             self.mpocr = MangaPageOcr(self.pretrained_model_name_or_path, self.force_cpu, disable_ocr=self.disable_ocr, **self.kwargs)
 
-    def process_dir(self, path, as_one_file=True, is_demo=False):
+    def process_dir(self, path, as_one_file=True, is_demo=False, for_server=False):
         path = Path(path).expanduser().absolute()
         assert path.is_dir(), f'{path} must be a directory'
         if path.stem == '_ocr':
@@ -78,13 +80,15 @@ class OverlayGenerator:
             shutil.copy(STYLES_PATH, out_dir / 'styles.css')
             shutil.copy(PANZOOM_PATH, out_dir / 'panzoom.min.js')
             shutil.copy(LOCAL_FORAGE, out_dir / 'localforage.min.js')
+            shutil.copy(CUSTOM_STORAGE, out_dir / 'customstorage.js')
             shutil.copy(JSCOLOR_PATH, out_dir / 'jscolor.js')
 
         img_paths = [p for p in path.glob('*') if p.is_file() and p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp')]
         img_paths = natsorted(img_paths)
 
         page_htmls = []
-
+        manga_id = path.relative_to(path.parent.parent).as_posix().replace("/", "_").replace("\\", "_")
+        
         for img_path in tqdm(img_paths, desc='Processing pages...'):
             json_path = (results_dir / img_path.relative_to(path)).with_suffix('.json')
             if json_path.is_file():
@@ -98,18 +102,25 @@ class OverlayGenerator:
                     continue
                 json_path.parent.mkdir(parents=True, exist_ok=True)
                 dump_json(result, json_path)
-
-            page_html = self.get_page_html(result, img_path.relative_to(out_dir), f"page{len(page_htmls)}")
+            img_path = img_path.relative_to(out_dir).as_posix()
+            if for_server:
+                img_url = f"http://localhost:5000/manga/{manga_id}/images?image_name={img_path}"
+                page_html = self.get_page_html(result, img_url, f"page{len(page_htmls)}")
+            else:
+                page_html = self.get_page_html(result, quote(img_path), f"page{len(page_htmls)}")
             page_htmls.append(page_html)
 
         if is_demo:
             title = f'mokuro {__version__} demo'
         else:
             title = f'{path.name} | mokuro'
-        index_html = self.get_index_html(page_htmls, title, as_one_file, is_demo)
-        (out_dir / 'mokuro.html').write_text(index_html, encoding='utf-8')
+        index_html = self.get_index_html(page_htmls, title, as_one_file, is_demo, for_server, manga_id)
+        if for_server:
+            (out_dir / 'mokuro_server.html').write_text(index_html, encoding='utf-8')
+        else:
+            (out_dir / 'mokuro.html').write_text(index_html, encoding='utf-8')
 
-    def get_index_html(self, page_htmls, title, as_one_file=True, is_demo=False):
+    def get_index_html(self, page_htmls, title, as_one_file=True, is_demo=False, for_server=False, manga_id=None):
         doc, tag, text = Doc().tagtext()
 
         with tag('html'):
@@ -133,7 +144,7 @@ class OverlayGenerator:
                         pass
 
             with tag('body'):
-                self.top_menu(doc, tag, text, len(page_htmls))
+                self.top_menu(doc, tag, text, len(page_htmls), for_server)
 
                 with tag('div', id='dimOverlay'):
                     pass
@@ -163,10 +174,13 @@ class OverlayGenerator:
                 
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>')
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
-                
+                if manga_id:
+                    doc.asis(f'<script>var mokuro_base_storage_key="{manga_id}";</script>')
                 if as_one_file:
                     with tag('script'):
                         doc.asis(LOCAL_FORAGE.read_text())
+                    with tag('script'):
+                        doc.asis(CUSTOM_STORAGE.read_text())
                     with tag('script'):
                         doc.asis(JSCOLOR_PATH.read_text())
                     with tag('script'):
@@ -175,6 +189,8 @@ class OverlayGenerator:
                         doc.asis(SCRIPT_PATH.read_text())
                 else:
                     with tag('script', src='localforage.min.js'):
+                        pass
+                    with tag('script', src='customstorage.js'):
                         pass
                     with tag('script', src='jscolor.js'):
                         pass
@@ -190,14 +206,16 @@ class OverlayGenerator:
         html = doc.getvalue()
         return html
 
-    def top_menu(self, doc, tag, text, num_pages):
+    def top_menu(self, doc, tag, text, num_pages, for_server=False):
         with tag('a', id='showMenuA', href='#'):
             pass
 
         with tag('div', id='topMenu'):
             with tag('button', id='buttonHideMenu', klass='menuButton'):
                 doc.asis(self.get_icon('cross-svgrepo-com'))
-
+            if for_server:
+                with tag('a', href="http://localhost:5000/", id='buttonMangaEngine', klass='menuButton', target='_blank'):
+                    text("ME")
             with tag('button', id='buttonLeftLeft', klass='menuButton'):
                 doc.asis(self.get_icon('chevron-left-double-svgrepo-com'))
 
@@ -306,7 +324,7 @@ class OverlayGenerator:
         else:
             z_idxs = []
 
-        with tag('div', klass='pageContainer', style=self.get_container_style(result, quote(str(img_path.as_posix())))):
+        with tag('div', klass='pageContainer', style=self.get_container_style(result, img_path)):
             block_count = 0
             fonts = [
                 "Noto Sans JP",
@@ -361,8 +379,6 @@ class OverlayGenerator:
 
                     content = "\n".join(result_blk['lines'])
                     contentStyle = ''
-                    if result_blk['vertical']:
-                        contentStyle='writing-mode: vertical-rl;'
                     with tag('div', klass='textBoxContent thin-black-stroke', style=contentStyle, id=f"{id}_box{block_count}_content"):
                         with tag('p'):
                             text(content)
