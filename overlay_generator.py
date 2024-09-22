@@ -247,18 +247,18 @@ class OverlayGenerator:
 
     def dropdown_menu(self, doc, tag, text):
         def option_click(id_, text_content):
-            with tag('a', href='#', klass='dropdown-option', id=id_):
+            with tag('a', href='#', klass='dropdown-option list-group-item', id=id_):
                 text(text_content)
 
         def option_toggle(id_, text_content):
-            with tag('label', klass='dropdown-option'):
+            with tag('label', klass='dropdown-option list-group-item'):
                 text(text_content)
 
                 with tag('input', type='checkbox', id=id_):
                     pass
 
         def option_select(id_, text_content, values):
-            with tag('label', klass='dropdown-option'):
+            with tag('label', klass='dropdown-option list-group-item'):
                 text(text_content)
                 with tag('select', id=id_):
                     for value in values:
@@ -266,10 +266,13 @@ class OverlayGenerator:
                             text(value)
 
         def option_color(id_, text_content, value):
-            with tag('label', klass='dropdown-option'):
+            with tag('label', klass='dropdown-option list-group-item'):
                 text(text_content)
                 with tag('input', type='color',  value=value, id=id_):
                     pass
+        
+        def option_collapse(target_id, text_content):
+            doc.asis(f'<label class="dropdown-option"><button class="menuButton" type="button" data-bs-toggle="collapse" data-bs-target="#{target_id}">{text_content}</button></label>')
 
         with tag('div', klass='dropdown'):
             with tag('button', id='dropbtn', klass='menuButton'):
@@ -292,24 +295,44 @@ class OverlayGenerator:
                     'original size',
                     'keep zoom level',
                 ])
-                option_toggle('menuR2l', 'right to left')
-                option_toggle('menuDoublePageView', 'display two pages ')
-                option_toggle('menuHasCover', 'first page is cover ')
-                option_select('menuFontSize', 'font size: ',
-                              ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
-                option_toggle('menuDisplayOCR', 'OCR enabled ')
-                option_toggle('menuToggleOCRTextBoxes', 'toggle OCR text boxes on click')
-                option_toggle('menuShowAllOCRTextBoxes', 'Show all text boxes')
-                option_toggle('menuToggleTextBoxCreation', 'Create textbox on click')
-                option_color('menuBackgroundColor', 'background color', '#343341')
-                option_color('menuTextBoxBgColor', 'textbox bg color', '#363839e8')
-                option_color('menuTextBoxTextColor', 'textbox text color', '#e8e6e3')
-                option_click('menuReset', 'reset settings')
-                option_click('menuResetStorage', 'reset local storage')
-                option_click('menuResetCurrentPage', 'reset current page')
-                option_click('menuTransferTextBoxText', 'transfer text from page storage')
-                option_click('menuSavePage', 'save page in storage')
-                option_click('menuSaveFile', 'save file')
+                option_collapse('readerOptions', 'Reader options')
+                with tag('div', klass='collapse', id='readerOptions'):
+                    with tag('div', klass="card card-body"):
+                        with tag('div', klass="list-group"):
+                            option_toggle('menuR2l', 'right to left')
+                            option_toggle('menuDoublePageView', 'display two pages ')
+                            option_toggle('menuHasCover', 'first page is cover ')
+                            option_color('menuBackgroundColor', 'background color', '#343341')
+                option_collapse('ocrOptions', 'OCR options')
+                with tag('div', klass="collapse", id="ocrOptions"):
+                    with tag('div', klass="card card-body"):
+                        with tag('div', klass="list-group"):
+                            option_toggle('menuDisplayOCR', 'OCR enabled ')
+                            option_toggle('menuToggleOCRTextBoxes', 'toggle OCR text boxes on click')
+                            option_toggle('menuShowAllOCRTextBoxes', 'Show all text boxes')
+                option_collapse('textboxOptions', 'Textbox options')
+                with tag('div', klass='collapse', id='textboxOptions'):
+                    with tag('div', klass="card card-body"):
+                        with tag('div', klass="list-group"):
+                            option_toggle('menuToggleTextBoxCreation', 'Create textbox on click')
+                            option_select('menuFontSize', 'font size: ',
+                                        ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
+                            option_color('menuTextBoxBgColor', 'textbox bg color', '#363839e8')
+                            option_color('menuTextBoxTextColor', 'textbox text color', '#e8e6e3')
+                option_collapse('resetOptions', 'Reset options')
+                with tag('div', klass='collapse', id='resetOptions'):
+                    with tag('div', klass="card card-body"):
+                        with tag('div', klass="list-group"):
+                            option_click('menuReset', 'reset settings')
+                            option_click('menuResetStorage', 'reset local storage')
+                            option_click('menuResetCurrentPage', 'reset current page')
+                option_collapse('saveLoadOptions', 'Save and load options')
+                with tag('div', klass='collapse', id='saveLoadOptions'):
+                    with tag('div', klass="card card-body"):
+                        with tag('div', klass="list-group"):
+                            option_click('menuTransferTextBoxText', 'transfer text from page storage')
+                            option_click('menuSavePage', 'save page in storage')
+                            option_click('menuSaveFile', 'save file')
                 option_click('menuAbout', 'about/help')
 
     def get_page_html(self, result, img_path, id):

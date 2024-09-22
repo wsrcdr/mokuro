@@ -454,8 +454,10 @@ function gatherFullText() {
 function updateCurrentPageImage(currentPage){
     if(customstorage.storageMode == "localforage"){
         let cp = currentPage.querySelector(".pageContainer");
-        let localImagePath = cp.style.backgroundImage.match(/image_name=(.*)\"/i)[1];
-        cp.style.backgroundImage = `url('${localImagePath}')`;
+        if(cp.style.backgroundImage.startsWith('url("http')){
+            let localImagePath = cp.style.backgroundImage.match(/image_name=(.*)\"/i)[1];
+            cp.style.backgroundImage = `url('${localImagePath}')`;
+        }
     }
 }
 
