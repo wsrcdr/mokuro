@@ -175,7 +175,7 @@ class OverlayGenerator:
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>')
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
                 if manga_id:
-                    doc.asis(f'<script>var mokuro_base_storage_key="{manga_id}";</script>')
+                    doc.asis(f'<script>var mokuro_base_storage_key="{manga_id}";var manga_id="{manga_id}";</script>')
                 if as_one_file:
                     with tag('script'):
                         doc.asis(LOCAL_FORAGE.read_text())

@@ -71,6 +71,7 @@ function updateUI() {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
+    await customstorage.initStorage();
     await loadState();
     let transferingData = sessionStorage.getItem("transferingData");
     if (transferingData) {
@@ -450,8 +451,17 @@ function gatherFullText() {
     container.innerHTML = result;
 }
 
+function updateCurrentPageImage(currentPage){
+    if(customstorage.storageMode == "localforage"){
+        let cp = currentPage.querySelector(".pageContainer");
+        let localImagePath = cp.style.backgroundImage.match(/image_name=(.*)\"/i)[1];
+        cp.style.backgroundImage = `url('${localImagePath}')`;
+    }
+}
+
 function updateProperties() {
     let currentPage = getCurrentPage();
+    updateCurrentPageImage(currentPage);
     if (currentPage !== currentPageObjects.currentPage) {
         currentPageObjects.currentPage = currentPage;
         currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
@@ -1098,13 +1108,13 @@ function copyTextBoxStyle(tb){
         bg = state.textBoxBgColor;
     }
     customInput.fromString(bg);
-    bg = customInput.toHEXString();
+    bg = customInput.toHEXAString();
     let textColor = content.style.color;
     if(!textColor){
         textColor = state.textBoxTextColor;
     }
     customInput.fromString(textColor);
-    textColor = customInput.toHEXString();
+    textColor = customInput.toHEXAString();
     let font_family_input = tb.querySelector('.textBox-btn-container').querySelector('.font-family-input');
     let fontFamilyIndex = -1;
     if(font_family_input){
@@ -1171,6 +1181,7 @@ function setTextBoxBg(tb, color){
         });
         tb.style.borderColor = "white";
     }
+    tb.querySelector('.textBox-btn-container').querySelector('.bg-color-input').jscolor.fromString(color);
 }
 
 function setTextBoxTextColor(tb, color){
@@ -1183,6 +1194,7 @@ function setTextBoxTextColor(tb, color){
         tbc.classList.add('white-stroke');
          tbc.classList.remove('thin-black-stroke'); 
     }
+    tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').jscolor.fromString(color);
 }
 
 function setTextBoxFontFamily(tb, value){

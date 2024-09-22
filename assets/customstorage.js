@@ -6,7 +6,7 @@ async function getData(url){
         }
         return await response.json();
     }catch(error){
-        console.error(error.message);
+        console.error(error);
         return null;
     }
 }
@@ -54,8 +54,20 @@ class MangaEngineStorage {
 class CustomStorage {
     constructor(manga_id){
         this.storage = localforage;
+        this.manga_id = manga_id;
+        this.storageMode = "localforage";
+    }
+
+    async initStorage(){
         if(window.location.hostname == "localhost"){
-            this.storage = new MangaEngineStorage(manga_id);
+            let mangaStorage = new MangaEngineStorage(this.manga_id);
+            const localhostAvailable = await mangaStorage.getData("/status");
+            if(!localhostAvailable){
+                console.error("Localhost was not available!");
+            }else{
+                this.storage = mangaStorage;
+                this.storageMode = "localhost";
+            }
         }
     }
 
