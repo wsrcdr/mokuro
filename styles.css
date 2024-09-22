@@ -75,6 +75,8 @@ body {
     align-content: center;
     padding: 0.1rem 0.25rem;
     flex-wrap: wrap;
+    width: 100%;
+    height: 100%;
 }
 
 .textBoxContent p {
@@ -413,8 +415,16 @@ select.btn {
     flex-wrap: wrap;
 }
 
+.tb-btn-group {
+    display: inline-block;
+    border-right: 2px solid var(--bs-border-color);
+}
+
 body.reading-mode .textBox {
     border: 0;
+    resize: none;
+    overflow: initial;
+    opacity: 1;
 }
 
 body.reading-mode .textBox-btn-container {
@@ -423,4 +433,8 @@ body.reading-mode .textBox-btn-container {
 
 body.reading-mode .textBox-top-bar {
     display: none;
+}
+
+.textBox.paint {
+    border: 0;
 }

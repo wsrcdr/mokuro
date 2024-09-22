@@ -19,6 +19,7 @@ let defaultState = {
     toggleOCRTextBoxes: true,
     showAllTextBoxes: false,
     toggleTextBoxCreation: false,
+    togglePaintBoxCreation: false,
     page_zindex: {},
     backgroundColor: '#C4C3D0',
     textBoxBgColor: '#363839e8',
@@ -54,9 +55,6 @@ async function loadState() {
 
     updateUI();
     updateProperties();
-    if(state.readingMode){
-        setCssClassState(document.body, 'reading-mode', true);
-    }
 }
 
 function updateUI() {
@@ -70,6 +68,7 @@ function updateUI() {
     document.getElementById('menuToggleOCRTextBoxes').checked = state.toggleOCRTextBoxes;
     document.getElementById('menuShowAllOCRTextBoxes').checked = state.showAllTextBoxes;
     document.getElementById('menuToggleTextBoxCreation').checked = state.toggleTextBoxCreation;
+    document.getElementById('menuTogglePaintBoxCreation').checked = state.togglePaintBoxCreation;
     document.getElementById('menuBackgroundColor').value = state.backgroundColor;
     document.getElementById('menuTextBoxBgColor').value = state.textBoxBgColor;
     document.getElementById('menuTextBoxTextColor').value = state.textBoxTextColor;
@@ -273,7 +272,7 @@ function initTextBoxes() {
     document.addEventListener('mouseup', function (e) {
         closest_div = e.target.closest('div');
         console.log('Clicked on: ', closest_div);
-        if (closest_div && !closest_div.classList.contains("textBox-btn-container") && !e.target.classList?.contains("textBox-btn")) {
+        if (closest_div && !closest_div.classList.contains("textBox-btn-container") && !e.target.classList?.contains("btn")) {
             let tb = closest_div.closest('.textBox');
             if (tb && tb.contains(closest_div)) {
                 console.log("Clicked inside a textbox!");
@@ -311,6 +310,14 @@ function initTextBoxes() {
                         setTextBoxBg(div, state.textBoxBgColor);
                         setTextBoxFontSize(div, state.fontSize);
                         setTextBoxTextColor(div, state.textBoxTextColor);       
+                    }else if(state.togglePaintBoxCreation){
+                        console.log("Adding paint textbox");
+                        let div = createEmptyTextBox(state.page_idx, e, true);
+                        closest_div.insertBefore(div, closest_div.firstChild);
+                        jscolor.install();
+                        setTextBoxBg(div, state.textBoxBgColor);
+                        setTextBoxFontSize(div, state.fontSize);
+                        setTextBoxTextColor(div, state.textBoxTextColor);
                     }
                 }
             }
@@ -318,7 +325,7 @@ function initTextBoxes() {
     });
 }
 
-function createEmptyTextBox(page_idx, e) {
+function createEmptyTextBox(page_idx, e, paint=false) {
     let fonts = [
         "Noto Sans JP",
         "East Sea Dokdo",
@@ -331,7 +338,7 @@ function createEmptyTextBox(page_idx, e) {
         "Mochiy Pop P One",
         "Miltonian Tattoo"
     ];
-    let font_picker_html = `<select class="btn btn-outline-light btn-sm m-1 font-family-input" onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);">`;
+    let font_picker_html = `<select class="btn btn-outline-light btn-sm font-family-input" onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);">`;
     fonts.forEach((el) => {
         font_picker_html += `<option style="font-family:${el};">${el}</option>`;
     });
@@ -342,6 +349,10 @@ function createEmptyTextBox(page_idx, e) {
     let id = randomIdGenerator();
     div.id = id;
     let zindex = state.page_zindex[page_idx.toString()] || 50;
+    if(paint){
+        zindex = 2;
+        div.classList.add("paint")
+    }
     state.page_zindex[page_idx.toString()] = zindex + 1;
     let coords = { x: 0, y: 0 };
     if (e) {
@@ -365,21 +376,26 @@ function createEmptyTextBox(page_idx, e) {
             </div>
         </div>\
         <div class="textBox-btn-container">\
-            <div class="d-inline-block">
-                <div class="btn btn-outline-light btn-sm m-1" onclick="editTextBox(this.closest('.textBox'))">✎</div>\
-                <div class="btn btn-outline-light btn-sm" style="text-decoration:underline;" onclick="toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fw-bold');">𝐁</div>\
-                <div class="btn btn-outline-light btn-sm" onclick="toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fst-italic');">𝐼</div>\
+            <div class="tb-btn-group">
+                <div class="btn btn-outline-light btn-sm" onclick="editTextBox(this.closest('.textBox'))">✎</div>
             </div>
-            <div class="d-inline-block">
-                <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
+            <div class="tb-btn-group">
+                <div class="btn btn-outline-light btn-sm" style="text-decoration:underline;" onclick="toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fw-bold');">𝐁</div><div class="btn btn-outline-light btn-sm" onclick="toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fst-italic');">𝐼</div>
             </div>
-            <div class="d-inline-block">
-                <div class="btn btn-outline-light btn-sm m-1", onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div><div class="btn btn-outline-light btn-sm m-1", onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
+            <div class="tb-btn-group">
+                <div class="btn btn-outline-light btn-sm" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
             </div>
-            <input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest('.textBox'),this.value);"></input>\
-            <input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest('.textBox'),this.value);"></input>\
-            <input class="btn btn-outline-light btn-sm m-1 font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
+            <div>
+                <div class="btn btn-outline-light btn-sm" onclick="copyTextBoxStyle(this.closest('.textBox'));">✂️</div><div class="btn btn-outline-light btn-sm" onclick="pasteTextBoxStyle(this.closest('.textBox'));">📋</div>
+            </div>
+            <div style="flex-basis:100%">
+                <input type="text" class="btn btn-outline-light btn-sm bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest('.textBox'),this.value);"></input>\
+                <input type="text" class="btn btn-outline-light btn-sm text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest('.textBox'),this.value);"></input>\
+            </div>
+            <div>
+            <input class="btn btn-outline-light btn-sm font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
             ${font_picker_html}
+            </div>\
         </div>\
         <div class="textBoxContent thin-black-stroke">\
             <p></p>\
@@ -397,12 +413,15 @@ function showAllTextBoxes() {
     }
 }
 
-function hideAllTextBoxes() {
+function hideAllTextBoxes(close_boxes=false) {
     console.log("Hiding all text boxes...")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
         textBoxes[i].classList.remove('hovered');
         textBoxes[i].classList.remove('doubleHovered');
+        if(close_boxes){
+            textBoxes[i].querySelector('.textBox-btn-container').style.display = "none";
+        }
     }
 }
 
@@ -474,6 +493,7 @@ function updateCurrentPageImage(currentPage) {
 }
 
 function updateProperties() {
+    setCssClassState(document.body, 'reading-mode', state.readingMode);
     let currentPage = getCurrentPage();
     updateCurrentPageImage(currentPage);
     if (currentPage !== currentPageObjects.currentPage) {
@@ -492,10 +512,10 @@ function updateProperties() {
         r.style.setProperty('--colorBackground', state.backgroundColor)
     }
 
-    if (state.showAllTextBoxes) {
+    if (state.showAllTextBoxes && !state.readingMode) {
         showAllTextBoxes();
     } else {
-        hideAllTextBoxes();
+        hideAllTextBoxes(state.readingMode);
     }
 }
 
@@ -517,8 +537,9 @@ function savePage(page_idx) {
 document.getElementById('menuReadingMode').addEventListener('click', function(e){
     state.readingMode = e.target.checked;
     saveState();
-    setCssClassState(document.body, 'reading-mode', state.readingMode);
-});
+    updateUI();
+    updateProperties();
+}, false);
 
 document.getElementById('menuR2l').addEventListener('click', async function () {
     state.r2l = document.getElementById("menuR2l").checked;
@@ -558,6 +579,12 @@ document.getElementById('menuShowAllOCRTextBoxes').addEventListener('click', fun
 
 document.getElementById('menuToggleTextBoxCreation').addEventListener('click', function () {
     state.toggleTextBoxCreation = document.getElementById("menuToggleTextBoxCreation").checked;
+    saveState();
+    updateProperties();
+}, false);
+
+document.getElementById('menuTogglePaintBoxCreation').addEventListener('click', function () {
+    state.togglePaintBoxCreation = document.getElementById("menuTogglePaintBoxCreation").checked;
     saveState();
     updateProperties();
 }, false);
@@ -958,14 +985,15 @@ function editTextBox(tb) {
         tb.setAttribute("data-width", tb.style.width);
         // get content
         let content = container.innerHTML.replace("<p>", "").replace("</p>", "").trim();
-        let width = tb.style.width;
-        let height = container.getBoundingClientRect().height;
         // update html with textarea
-        let ta = `<textarea style="width:${width};height:${height};font-size:${tb.style.fontSize};resize:both;">${content}</textarea>`;
+        let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};resize:none;">${content}</textarea>`;
         container.innerHTML = ta;
+        // update textbox size for edit
+        tb.style.height = "fit-content";
+        tb.style.width = "210px";
         // select textarea
         let taEl = container.querySelector("textarea");
-        taEl.scrollIntoView();
+        // taEl.scrollIntoView();
         taEl.focus();
         taEl.select();
     }

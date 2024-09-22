@@ -320,6 +320,7 @@ class OverlayGenerator:
                                         ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
                             option_color('menuTextBoxBgColor', 'textbox bg color', '#363839e8')
                             option_color('menuTextBoxTextColor', 'textbox text color', '#e8e6e3')
+                            option_toggle('menuTogglePaintBoxCreation', 'Create paintbox on click')
                 option_collapse('resetOptions', 'Reset options')
                 with tag('div', klass='collapse', id='resetOptions'):
                     with tag('div', klass="card card-body"):
@@ -377,30 +378,33 @@ class OverlayGenerator:
                             with tag('span', klass='btn btn-outline-light btn-sm', onclick='toggleTextBoxControls(this.closest(".textBox"));'):
                                 text('m')
                     with tag('div', klass="textBox-btn-container"):
-                        with tag('div', klass="d-inline-block"):
+                        with tag('div', klass="tb-btn-group"):
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"editTextBox(this.closest('.textBox'))"):
                                 text('✎')
+                        with tag('div', klass="tb-btn-group"):
                             with tag('div', klass='btn btn-outline-light btn-sm', style='text-decoration:underline;', onclick=f"toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fw-bold');"):
                                 text('𝐁')
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fst-italic');"):
                                 text('𝐼')
-                        with tag('div', klass="d-inline-block"):
+                        with tag('div', klass="tb-btn-group"):
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
                                 text('⇥')
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';"):
                                 text('⤓')
-                        with tag('div', klass="d-inline-block"):
+                        with tag('div'):
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"copyTextBoxStyle(this.closest('.textBox'));"):
                                 text('✂️')
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"pasteTextBoxStyle(this.closest('.textBox'));"):
                                 text('📋')
-                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest(\'.textBox\'),this.value);"></input>')
-                        doc.asis('<input type="text" class="btn btn-outline-light btn-sm m-1 text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest(\'.textBox\'),this.value);"></input>')
-                        with tag('input', klass="btn btn-outline-light btn-sm m-1 font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
-                            pass
-                        with tag('select', klass="btn btn-outline-light btn-sm m-1 font-family-input", onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);"):
-                            for font in fonts:
-                                doc.asis(f'<option style="font-family: {font};">{font}</option>')
+                        with tag('div', style="flex-basis:100%;"):
+                            doc.asis('<input type="text" class="btn btn-outline-light btn-sm bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest(\'.textBox\'),this.value);"></input>')
+                            doc.asis('<input type="text" class="btn btn-outline-light btn-sm text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest(\'.textBox\'),this.value);"></input>')
+                        with tag('div'):
+                            with tag('select', klass="btn btn-outline-light btn-sm font-family-input", onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);"):
+                                for font in fonts:
+                                    doc.asis(f'<option style="font-family: {font};">{font}</option>')
+                            with tag('input', klass="btn btn-outline-light btn-sm font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
+                                pass
                         
 
                     content = "\n".join(result_blk['lines'])
