@@ -158,6 +158,7 @@ async function afterInitialLoadFinish() {
     setAllTextBoxesFontSize();
     setAllTextBoxesBg();
     setAllTextBoxesTextColor();
+    await updatePage(state.page_idx);
 }
 
 function handleMenuInputChange(target) {
@@ -927,6 +928,13 @@ async function loadPageFromStorage(page_idx) {
         document.getElementById("page" + page_idx).innerHTML = value;
         jscolor.install();
         pushNotify("Loaded page from storage", "Loaded this page from storage");
+        let tds = getCurrentPage().querySelectorAll(".textBox");
+        let previousTextBoxStyle = structuredClone(currentTextBoxStyle);
+        for(let i = 0;i<tds.length;i++){
+            copyTextBoxStyle(tds[i]);
+            pasteTextBoxStyle(tds[i]);
+        }
+        currentTextBoxStyle = previousTextBoxStyle;
     }
 }
 
@@ -1155,8 +1163,8 @@ class TextBoxStyle {
 
 function copyTextBoxStyle(tb) {
     let content = tb.querySelector('.textBoxContent');
-    let bg = tb.querySelector('.textBox-btn-container').querySelector('.bg-color-input').jscolor.toHEXAString();
-    let textColor = tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').jscolor.toHEXAString();
+    let bg = parseColorToHex(tb.style.background || state.textBoxBgColor);
+    let textColor = parseColorToHex(tb.querySelector('.textBox-btn-container').style.color || state.textBoxTextColor);
     let font_family_input = tb.querySelector('.textBox-btn-container').querySelector('.font-family-input');
     let fontFamilyIndex = -1;
     if (font_family_input) {
@@ -1260,6 +1268,19 @@ function hexToRgb(hex) {
     return `rgb(${r},${g},${b})`;
 }
 
+function parseColorToHex(color_str){
+    if(color_str.startsWith("#")){
+        return color_str;
+    }
+    if(color_str.startsWith("rgb(")){
+        customInput.fromString(color_str);
+        return customInput.toHEXAString();
+    }
+    if(color_str.startsWith("rgba(")){
+        return rgbaToHex(color_str);
+    }
+}
+
 function toggleCssClass(el, cls){
     if(el.classList.contains(cls)){
         el.classList.remove(cls);
@@ -1274,4 +1295,31 @@ function setCssClassState(el, cls, state){
     }else{
         el.classList.remove(cls);
     }
+}
+
+function trim (str) {
+    return str.replace(/^\s+|\s+$/gm,'');
+}
+  
+function rgbaToHex (rgba) {
+    var inParts = rgba.substring(rgba.indexOf("(")).split(","),
+        r = parseInt(trim(inParts[0].substring(1)), 10),
+        g = parseInt(trim(inParts[1]), 10),
+        b = parseInt(trim(inParts[2]), 10),
+        a = parseFloat(trim(inParts[3].substring(0, inParts[3].length - 1))).toFixed(2);
+    var outParts = [
+        r.toString(16),
+        g.toString(16),
+        b.toString(16),
+        Math.round(a * 255).toString(16).substring(0, 2)
+    ];
+
+    // Pad single-digit output values
+    outParts.forEach(function (part, i) {
+        if (part.length === 1) {
+        outParts[i] = '0' + part;
+        }
+    })
+
+    return ('#' + outParts.join(''));
 }
