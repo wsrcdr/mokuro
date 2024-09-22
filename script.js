@@ -26,6 +26,7 @@ let defaultState = {
     editingTextBox: false,
     lastCopiedTb: null,
     draggingTextBox: null,
+    readingMode: false
 };
 
 let state = JSON.parse(JSON.stringify(defaultState));
@@ -37,7 +38,7 @@ let customInput = null;
 customInput = document.createElement("input");
 customInput.id = "customInternalInput";
 customInput.style.display = "none";
-customInput = new JSColor(customInput, {});
+customInput = new JSColor(customInput, {'backgroundColor': 'rgba(255,255,255,0)'});
 
 function saveState() {
     state.draggingTextBox = null;
@@ -53,9 +54,13 @@ async function loadState() {
 
     updateUI();
     updateProperties();
+    if(state.readingMode){
+        setCssClassState(document.body, 'reading-mode', true);
+    }
 }
 
 function updateUI() {
+    document.getElementById("menuReadingMode").checked = state.readingMode;
     document.getElementById("menuR2l").checked = state.r2l;
     document.getElementById("menuDoublePageView").checked = !state.singlePageView;
     document.getElementById("menuHasCover").checked = state.hasCover;
@@ -129,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function afterInitialLoadFinish() {
     let default_palette = '#FFFFFFFF,#000000FF,#e8e6e3,#363839e8,#616161,#A4C400,#60A917,#008A00,#00ABA9,#1BA1E2,#0050EF,#6A00FF,#AA00FF,#F472D0, #e2547c, #E91E63,#f7c3b8, #D80073,#A20025,#E51400,#FA6800,#F0A30A,#E3C800,#825A2C,#6D8764,#647687,#76608A,#A0522D,#c86e4c';
-    let storage_palette = await customstorage.getItem(getStorageBaseKey()+"_jscolor_palette");
+    let storage_palette = await customstorage.getItem(getStorageBaseKey() + "_jscolor_palette");
     jscolor.presets.default = {
         palette: storage_palette || default_palette,
         paletteCols: 10,
@@ -138,15 +143,16 @@ async function afterInitialLoadFinish() {
     };
 
     // add some custom inputs here
-    let ids = [{id: "menuBackgroundColor", target: "state.backgroundColor"},
-    {id: "menuTextBoxBgColor", target: "state.textBoxBgColor"}, 
-    {id: "menuTextBoxTextColor", target: "state.textBoxTextColor"}];
-    for(let i=0;i<ids.length;i++){
+    let ids = [{ id: "menuBackgroundColor", target: "state.backgroundColor" },
+    { id: "menuTextBoxBgColor", target: "state.textBoxBgColor" },
+    { id: "menuTextBoxTextColor", target: "state.textBoxTextColor" }];
+    for (let i = 0; i < ids.length; i++) {
         let el = document.getElementById(ids[i].id);
+        el.setAttribute("value", eval(ids[i].target));
         el.setAttribute("type", "text");
         el.setAttribute("onchange", `${ids[i].target}=this.value;saveState();handleMenuInputChange('${ids[i].target}');`);
         el.setAttribute("size", "8");
-        let opts = {value: el.getAttribute("value")};
+        let opts = { value: el.getAttribute("value") };
         new JSColor(el, opts);
     }
     jscolor.install();
@@ -155,11 +161,12 @@ async function afterInitialLoadFinish() {
     setAllTextBoxesTextColor();
 }
 
-function handleMenuInputChange(target){
-    if(target === 'state.textBoxBgColor'){
+function handleMenuInputChange(target) {
+    console.log('handling menu input');
+    if (target === 'state.textBoxBgColor') {
         setAllTextBoxesBg();
     }
-    if(target === 'state.textBoxTextColor'){
+    if (target === 'state.textBoxTextColor') {
         setAllTextBoxesTextColor();
     }
 }
@@ -234,18 +241,18 @@ function getMouseCoordinates(e) {
     };
 }
 
-document.addEventListener('keydown', function(e){
-    if(!state.editingTextBox){
-        if(e.key == "ArrowLeft"){
+document.addEventListener('keydown', function (e) {
+    if (!state.editingTextBox) {
+        if (e.key == "ArrowLeft") {
             inputLeft();
         }
-        if(e.key == "ArrowRight"){
+        if (e.key == "ArrowRight") {
             inputRight();
         }
     }
 })
 
-document.addEventListener('mousedown', function (e){
+document.addEventListener('mousedown', function (e) {
     if (state.draggingTextBox) {
         state.draggingTextBox = null;
         saveCurrentPage();
@@ -301,6 +308,9 @@ function initTextBoxes() {
                         let div = createEmptyTextBox(state.page_idx, e);
                         closest_div.appendChild(div);
                         jscolor.install();
+                        setTextBoxBg(div, state.textBoxBgColor);
+                        setTextBoxFontSize(div, state.fontSize);
+                        setTextBoxTextColor(div, state.textBoxTextColor);       
                     }
                 }
             }
@@ -308,7 +318,7 @@ function initTextBoxes() {
     });
 }
 
-function createEmptyTextBox(page_idx, e){
+function createEmptyTextBox(page_idx, e) {
     let fonts = [
         "Noto Sans JP",
         "East Sea Dokdo",
@@ -333,17 +343,17 @@ function createEmptyTextBox(page_idx, e){
     div.id = id;
     let zindex = state.page_zindex[page_idx.toString()] || 50;
     state.page_zindex[page_idx.toString()] = zindex + 1;
-    let coords = {x: 0, y:0};
-    if(e){
+    let coords = { x: 0, y: 0 };
+    if (e) {
         coords = getMouseCoordinates(e);
     }
     let fontSize = state.fontSize;
-    if(fontSize === 'auto'){
+    if (fontSize === 'auto') {
         fontSize = 14;
     }
     div.setAttribute('style', `left:${coords.x}px; top:${coords.y}px; height:50; width:100; z-index:${zindex}; font-size:32px;`);
     div.innerHTML = `\
-        <div style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;">\
+        <div class="textBox-top-bar">\
             <div style="display:inline-block;">\
                 <span class="btn btn-outline-light btn-sm float-left m-1" onclick="removeTextBox(this.closest('.textBox'))">x</span>\
             </div>\
@@ -356,7 +366,9 @@ function createEmptyTextBox(page_idx, e){
         </div>\
         <div class="textBox-btn-container">\
             <div class="d-inline-block">
-                <div class="btn btn-outline-light btn-sm m-1" onclick="editTextBox(this.closest('.textBox'))">✎</div><div class="btn btn-outline-light btn-sm m-1" onclick="toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))">st</div>
+                <div class="btn btn-outline-light btn-sm m-1" onclick="editTextBox(this.closest('.textBox'))">✎</div>\
+                <div class="btn btn-outline-light btn-sm" style="text-decoration:underline;" onclick="toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fw-bold');">𝐁</div>\
+                <div class="btn btn-outline-light btn-sm" onclick="toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fst-italic');">𝐼</div>\
             </div>
             <div class="d-inline-block">
                 <div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';">⇥</div><div class="btn btn-outline-light btn-sm m-1" onclick="this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'vertical-rl';">⤓</div>
@@ -394,16 +406,16 @@ function hideAllTextBoxes() {
     }
 }
 
-function setAllTextBoxesFontSize(){
-    if(state.fontSize !== "auto"){
+function setAllTextBoxesFontSize() {
+    if (state.fontSize !== "auto") {
         let textboxes = pc.querySelectorAll('.textBox');
-        for(let i=0;i<textboxes.length;i++){
+        for (let i = 0; i < textboxes.length; i++) {
             setTextBoxFontSize(textboxes[i], state.fontSize);
         }
     }
 }
 
-function isColorLight(color){
+function isColorLight(color) {
     const hex = color.replace('#', '');
     const c_r = parseInt(hex.substr(0, 2), 16);
     const c_g = parseInt(hex.substr(2, 2), 16);
@@ -412,18 +424,18 @@ function isColorLight(color){
     return brightness > 155;
 }
 
-function setAllTextBoxesBg(){
+function setAllTextBoxesBg() {
     let textboxes = pc.querySelectorAll('.textBox');
     let newColor = state.textBoxBgColor;
-    for(let i=0;i<textboxes.length;i++){
+    for (let i = 0; i < textboxes.length; i++) {
         setTextBoxBg(textboxes[i], newColor);
     }
 }
 
-function setAllTextBoxesTextColor(){
+function setAllTextBoxesTextColor() {
     let textboxes = pc.querySelectorAll('.textBox');
-    for(let i=0;i<textboxes.length;i++){
-        setTextBoxTextColor(textboxes[i],state.textBoxTextColor);
+    for (let i = 0; i < textboxes.length; i++) {
+        setTextBoxTextColor(textboxes[i], state.textBoxTextColor);
     }
 }
 
@@ -451,10 +463,10 @@ function gatherFullText() {
     container.innerHTML = result;
 }
 
-function updateCurrentPageImage(currentPage){
-    if(customstorage.storageMode == "localforage"){
+function updateCurrentPageImage(currentPage) {
+    if (customstorage.storageMode == "localforage") {
         let cp = currentPage.querySelector(".pageContainer");
-        if(cp.style.backgroundImage.startsWith('url("http')){
+        if (cp.style.backgroundImage.startsWith('url("http')) {
             let localImagePath = cp.style.backgroundImage.match(/image_name=(.*)\"/i)[1];
             cp.style.backgroundImage = `url('${localImagePath}')`;
         }
@@ -501,6 +513,12 @@ function savePage(page_idx) {
     let key = getStorageBaseKey() + "_" + page.id;
     customstorage.setItem(key, page.innerHTML);
 }
+
+document.getElementById('menuReadingMode').addEventListener('click', function(e){
+    state.readingMode = e.target.checked;
+    saveState();
+    setCssClassState(document.body, 'reading-mode', state.readingMode);
+});
 
 document.getElementById('menuR2l').addEventListener('click', async function () {
     state.r2l = document.getElementById("menuR2l").checked;
@@ -558,6 +576,9 @@ document.getElementById('menuAbout').addEventListener('click', function () {
 document.getElementById('menuReset').addEventListener('click', async function () {
     let page_idx = state.page_idx;
     state = JSON.parse(JSON.stringify(defaultState));
+    setAllTextBoxesBg();
+    setAllTextBoxesFontSize();
+    setAllTextBoxesTextColor();
     updateUI();
     await updatePage(page_idx);
     updateProperties();
@@ -593,7 +614,7 @@ document.getElementById('dimOverlay').addEventListener('click', function () {
 
 document.getElementById('menuFontSize').addEventListener('change', (e) => {
     state.fontSize = e.target.value;
-    if(state.fontSize !== 'auto'){
+    if (state.fontSize !== 'auto') {
         setAllTextBoxesFontSize();
     }
     saveState();
@@ -866,7 +887,7 @@ document.addEventListener('copy', function (e) {
     e.preventDefault();
 });
 
-function getStorageBaseKey(){
+function getStorageBaseKey() {
     let key = mokuro_base_storage_key || window.location.pathname.slice(window.location.pathname.indexOf("hentai"));
     return key;
 }
@@ -965,9 +986,9 @@ async function startTextTransferFromStorage() {
     let start_transfer = false;
     let key_template = getStorageBaseKey() + "_" + "page";
     let keys = await customstorage.keys();
-    for(let i=0;i<keys.length;i++){
+    for (let i = 0; i < keys.length; i++) {
         let key = keys[i];
-        if(key.includes(key_template)){
+        if (key.includes(key_template)) {
             start_transfer = true;
             break;
         }
@@ -985,19 +1006,19 @@ async function transferTextBoxTextFromStorage() {
     let page_keys = [];
     let key_template = getStorageBaseKey() + "_" + "page";
     let keys = await customstorage.keys();
-    for(let i=0;i<keys.length;i++){
+    for (let i = 0; i < keys.length; i++) {
         let key = keys[i];
-        if(key.includes(key_template)){
+        if (key.includes(key_template)) {
             page_keys.push(key);
         }
     }
-    for(let i=0;i<page_keys.length;i++){
+    for (let i = 0; i < page_keys.length; i++) {
         console.log("Doing transfer for ", page_keys[i]);
         let storageData = await customstorage.getItem(page_keys[i]);
         if (storageData) {
             console.log("has storage");
             let page_key_aux = page_keys[i].split("_");
-            let page_idx = page_key_aux[page_key_aux.length - 1].replace("page","");
+            let page_idx = page_key_aux[page_key_aux.length - 1].replace("page", "");
             let data = {};
             let pageTextboxes = getPage(page_idx).querySelectorAll('.textBoxContent');
             for (let i = 0; i < pageTextboxes.length; i++) {
@@ -1019,7 +1040,7 @@ async function transferTextBoxTextFromStorage() {
                     let target_tb = data[tb.id].closest('.textBox');
                     console.log("Target tb: ", target_tb);
                     replicateTextBox(storage_tb, target_tb);
-                // it's a new textbox
+                    // it's a new textbox
                 } else {
                     // create an empty textbox
                     let ntb = createEmptyTextBox(page_idx, null);
@@ -1035,7 +1056,7 @@ async function transferTextBoxTextFromStorage() {
 }
 
 /** Receives 2 TextBoxes, copies everything relevant from the original textbox to the new one. */
-function replicateTextBox(og, target){
+function replicateTextBox(og, target) {
     // content
     original_content = og.querySelector('.textBoxContent');
     target_content = target.querySelector('.textBoxContent');
@@ -1063,16 +1084,16 @@ function dragTextBox(tb) {
     state.draggingTextBox = tb;
 }
 
-async function resetcustomstorage(){
+async function resetcustomstorage() {
     let keys = [];
     let storageKeys = await customstorage.keys();
-    for(let i=0;i<storageKeys.length;i++){
+    for (let i = 0; i < storageKeys.length; i++) {
         let key = storageKeys[i];
-        if(key.includes(getStorageBaseKey())){
+        if (key.includes(getStorageBaseKey())) {
             keys.push(key);
         }
     }
-    for(let a=0;a<keys.length;a++){
+    for (let a = 0; a < keys.length; a++) {
         await customstorage.removeItem(keys[a]);
     }
     state = JSON.parse(JSON.stringify(defaultState));
@@ -1080,63 +1101,54 @@ async function resetcustomstorage(){
     window.location.reload();
 }
 
-function toggleStroke(el){
-    if (el.classList.contains("white-stroke")){
+function toggleStroke(el) {
+    if (el.classList.contains("white-stroke")) {
         el.classList.remove("white-stroke");
         el.classList.add("thin-black-stroke");
-    }else{
+    } else {
         el.classList.remove("thin-black-stroke");
         el.classList.add("white-stroke");
     }
 }
 
-function removeTextBox(tb){
+function removeTextBox(tb) {
     tb.remove();
 }
 
-class TextBoxStyle{
-    constructor(bg, textColor, fontFamilyIndex, fontSize){
+class TextBoxStyle {
+    constructor(bg, textColor, fontFamilyIndex, fontSize, contentClassList) {
         this.bg = bg;
         this.textColor = textColor;
         this.fontFamilyIndex = fontFamilyIndex;
         this.fontSize = fontSize;
+        this.contentClassList = contentClassList;
     }
 }
 
-function copyTextBoxStyle(tb){
+function copyTextBoxStyle(tb) {
     let content = tb.querySelector('.textBoxContent');
-    let bg = tb.style.background;
-    if(!bg){
-        bg = state.textBoxBgColor;
-    }
-    customInput.fromString(bg);
-    bg = customInput.toHEXAString();
-    let textColor = content.style.color;
-    if(!textColor){
-        textColor = state.textBoxTextColor;
-    }
-    customInput.fromString(textColor);
-    textColor = customInput.toHEXAString();
+    let bg = tb.querySelector('.textBox-btn-container').querySelector('.bg-color-input').jscolor.toHEXAString();
+    let textColor = tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').jscolor.toHEXAString();
     let font_family_input = tb.querySelector('.textBox-btn-container').querySelector('.font-family-input');
     let fontFamilyIndex = -1;
-    if(font_family_input){
+    if (font_family_input) {
         fontFamilyIndex = font_family_input.selectedIndex;
     }
     let fontSize = tb.style.fontSize.replace("pt", "");
-    if(!fontSize){
+    if (!fontSize) {
         fontSize = '14';
     }
-    currentTextBoxStyle = new TextBoxStyle(bg, textColor, fontFamilyIndex, fontSize);
+    currentTextBoxStyle = new TextBoxStyle(bg, textColor, fontFamilyIndex, fontSize, content.classList);
 }
 
-function pasteTextBoxStyle(tb){
-    if(!currentTextBoxStyle){
+function pasteTextBoxStyle(tb) {
+    if (!currentTextBoxStyle) {
         alert("You need to first copy a textbox style!");
     }
-    else{
+    else {
         let controls = tb.querySelector('.textBox-btn-container');
         let font_family_input = controls.querySelector('.font-family-input');
-        if(font_family_input && currentTextBoxStyle.fontFamilyIndex != -1){
+        if (font_family_input && currentTextBoxStyle.fontFamilyIndex != -1) {
             font_family_input.selectedIndex = currentTextBoxStyle.fontFamilyIndex;
             let fontFamily = font_family_input.options[currentTextBoxStyle.fontFamilyIndex].value;
             setTextBoxFontFamily(tb, fontFamily);
@@ -1147,35 +1159,36 @@ function pasteTextBoxStyle(tb){
         // update inputs
         let bg_input = controls.querySelector('.bg-color-input');
         let text_input = controls.querySelector('.text-color-input');
-        if(!bg_input.jscolor){
+        if (!bg_input.jscolor) {
             new JSColor(bg_input).fromString(currentTextBoxStyle.bg);
-        }else{
+        } else {
             bg_input.jscolor.fromString(currentTextBoxStyle.bg);
         }
-        if(!text_input.jscolor){
+        if (!text_input.jscolor) {
             new JSColor(text_input).fromString(currentTextBoxStyle.textColor);
-        }else{
+        } else {
             text_input.jscolor.fromString(currentTextBoxStyle.textColor);
         }
+        tb.querySelector('.textBoxContent').classList = currentTextBoxStyle.contentClassList;
     }
 }
 
-function setTextBoxFontSize(tb, fontSize){
+function setTextBoxFontSize(tb, fontSize) {
     tb.style.fontSize = fontSize + 'pt';
     tb.querySelector('.textBox-btn-container').querySelector('.font-size-input').setAttribute("value", fontSize);
 }
 
-function setTextBoxBg(tb, color){
+function setTextBoxBg(tb, color) {
     tb.style.background = color;
     // change controls colors
-    if(isColorLight(color)){
+    if (isColorLight(color)) {
         tb.querySelectorAll('.btn').forEach(el => {
             el.classList.add("btn-outline-dark");
             el.classList.remove("btn-outline-light");
             el.color = "black";
         });
         tb.style.borderColor = "black";
-    }else{
+    } else {
         tb.querySelectorAll('.btn').forEach(el => {
             el.classList.remove("btn-outline-dark");
             el.classList.add("btn-outline-light");
@@ -1186,35 +1199,51 @@ function setTextBoxBg(tb, color){
     tb.querySelector('.textBox-btn-container').querySelector('.bg-color-input').jscolor.fromString(color);
 }
 
-function setTextBoxTextColor(tb, color){
+function setTextBoxTextColor(tb, color) {
     let tbc = tb.querySelector('.textBoxContent');
     tbc.style.color = color;
-    if(isColorLight(color)){
-         tbc.classList.remove('white-stroke');
-         tbc.classList.add('thin-black-stroke'); 
-    }else{
+    if (isColorLight(color)) {
+        tbc.classList.remove('white-stroke');
+        tbc.classList.add('thin-black-stroke');
+    } else {
         tbc.classList.add('white-stroke');
-         tbc.classList.remove('thin-black-stroke'); 
+        tbc.classList.remove('thin-black-stroke');
     }
     tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').jscolor.fromString(color);
 }
 
-function setTextBoxFontFamily(tb, value){
+function setTextBoxFontFamily(tb, value) {
     tb.querySelector('.textBoxContent').style.fontFamily = value;
 }
 
 function hexToRgb(hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-      return r + r + g + g + b + b;
+    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+        return r + r + g + g + b + b;
     });
-  
+
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     result = {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
     }
     return `rgb(${r},${g},${b})`;
-  }
+}
+
+function toggleCssClass(el, cls){
+    if(el.classList.contains(cls)){
+        el.classList.remove(cls);
+    }else{
+        el.classList.add(cls);
+    }
+}
+
+function setCssClassState(el, cls, state){
+    if(state){
+        el.classList.add(cls);
+    }else{
+        el.classList.remove(cls);
+    }
+}

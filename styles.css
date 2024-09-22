@@ -21,7 +21,8 @@ body {
     transition: none !important;
 }
 
-#topMenu *, .popup * {
+#topMenu *,
+.popup * {
     font-family: "Open Sans", sans-serif;
 }
 
@@ -45,7 +46,7 @@ body {
     overflow: auto;
     flex-direction: column;
     align-items: stretch;
-    opacity: 0;   
+    opacity: 0;
 }
 
 .black-stroke {
@@ -124,12 +125,16 @@ body {
     margin: 0 -1px 0 0;
 }
 
-#leftAPage, #rightAPage, #leftAScreen, #rightAScreen {
+#leftAPage,
+#rightAPage,
+#leftAScreen,
+#rightAScreen {
     z-index: 1;
     background-color: rgba(0, 0, 0, 0);
 }
 
-#leftAPage, #rightAPage {
+#leftAPage,
+#rightAPage {
     /*display: inline-block;*/
     display: none;
     position: absolute;
@@ -146,7 +151,8 @@ body {
     right: -7%;
 }
 
-#leftAScreen, #rightAScreen {
+#leftAScreen,
+#rightAScreen {
     display: inline-block;
     position: fixed;
     top: 10vh;
@@ -334,6 +340,7 @@ input[type=number] {
     margin-right: 10px;
     margin-bottom: 10px;
 }
+
 .textBox-btn:hover {
     background: #3c3f41;
 }
@@ -347,7 +354,7 @@ input[type=number] {
 }
 
 .btn-close {
-    float:left;
+    float: left;
 }
 
 .btn-move {
@@ -395,4 +402,25 @@ select.btn {
 
 .textBoxContent * {
     font-family: inherit;
+}
+
+.textBox-top-bar {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: normal;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+body.reading-mode .textBox {
+    border: 0;
+}
+
+body.reading-mode .textBox-btn-container {
+    display: none;
+}
+
+body.reading-mode .textBox-top-bar {
+    display: none;
 }

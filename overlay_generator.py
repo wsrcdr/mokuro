@@ -299,6 +299,7 @@ class OverlayGenerator:
                 with tag('div', klass='collapse', id='readerOptions'):
                     with tag('div', klass="card card-body"):
                         with tag('div', klass="list-group"):
+                            option_toggle('menuReadingMode', 'reading mode')
                             option_toggle('menuR2l', 'right to left')
                             option_toggle('menuDoublePageView', 'display two pages ')
                             option_toggle('menuHasCover', 'first page is cover ')
@@ -365,7 +366,7 @@ class OverlayGenerator:
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
                 with tag('div', klass='textBox', style=box_style, id=f"{id}_box{block_count}"):
-                    with tag('div', style="display:flex;width:100%;flex-direction:row;align-items:normal;justify-content:space-between;flex-wrap:wrap;"):
+                    with tag('div', klass="textBox-top-bar"):
                         with tag('div', style="display:inline-block;"):
                             with tag('span', klass='btn btn-outline-light btn-sm float-left', onclick='removeTextBox(this.closest(".textBox"));'):
                                 text('x')
@@ -379,8 +380,10 @@ class OverlayGenerator:
                         with tag('div', klass="d-inline-block"):
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"editTextBox(this.closest('.textBox'))"):
                                 text('✎')
-                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"toggleStroke(this.closest('.textBox').querySelector('.textBoxContent'))"):
-                                text('st')
+                            with tag('div', klass='btn btn-outline-light btn-sm', style='text-decoration:underline;', onclick=f"toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fw-bold');"):
+                                text('𝐁')
+                            with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"toggleCssClass(this.closest('.textBox').querySelector('.textBoxContent'), 'fst-italic');"):
+                                text('𝐼')
                         with tag('div', klass="d-inline-block"):
                             with tag('div', klass='btn btn-outline-light btn-sm', onclick=f"this.closest('.textBox').querySelector('.textBoxContent').style.writingMode = 'horizontal-tb';"):
                                 text('⇥')
