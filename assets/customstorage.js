@@ -61,7 +61,7 @@ class CustomStorage {
     async initStorage(){
         if(window.location.hostname == "localhost"){
             let mangaStorage = new MangaEngineStorage(this.manga_id);
-            const localhostAvailable = await mangaStorage.getData("/status");
+            const localhostAvailable = await getData("/status");
             if(!localhostAvailable){
                 console.error("Localhost was not available!");
             }else{
