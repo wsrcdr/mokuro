@@ -309,18 +309,19 @@ class OverlayGenerator:
                     with tag('div', klass="card card-body"):
                         with tag('div', klass="list-group"):
                             option_toggle('menuDisplayOCR', 'OCR enabled ')
-                            option_toggle('menuToggleOCRTextBoxes', 'toggle OCR text boxes on click')
-                            option_toggle('menuShowAllOCRTextBoxes', 'Show all text boxes')
                 option_collapse('textboxOptions', 'Textbox options')
                 with tag('div', klass='collapse', id='textboxOptions'):
                     with tag('div', klass="card card-body"):
                         with tag('div', klass="list-group"):
+                            option_toggle('menuToggleOCRTextBoxes', 'toggle text boxes on click')
+                            option_toggle('menuShowAllOCRTextBoxes', 'Show all text boxes')
                             option_toggle('menuToggleTextBoxCreation', 'Create textbox on click')
+                            option_toggle('menuShowAllPaintBoxes', 'Show all paint boxes')
+                            option_toggle('menuTogglePaintBoxCreation', 'Create paintbox on click')
                             option_select('menuFontSize', 'font size: ',
                                         ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
                             option_color('menuTextBoxBgColor', 'textbox bg color', '#363839e8')
                             option_color('menuTextBoxTextColor', 'textbox text color', '#e8e6e3')
-                            option_toggle('menuTogglePaintBoxCreation', 'Create paintbox on click')
                 option_collapse('resetOptions', 'Reset options')
                 with tag('div', klass='collapse', id='resetOptions'):
                     with tag('div', klass="card card-body"):
@@ -369,13 +370,13 @@ class OverlayGenerator:
                 with tag('div', klass='textBox', style=box_style, id=f"{id}_box{block_count}"):
                     with tag('div', klass="textBox-top-bar"):
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm float-left', onclick='removeTextBox(this.closest(".textBox"));'):
+                            with tag('span', klass='btn btn-outline-light btn-sm float-left close-button', onclick='removeTextBox(this.closest(".textBox"));'):
                                 text('x')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm float-right', onclick=f"dragTextBox(this.closest('.textBox'));"):
+                            with tag('span', klass='btn btn-outline-light btn-sm float-right move-button', onclick=f"dragTextBox(this.closest('.textBox'));"):
                                 text('✥')
                         with tag('div', style="display:inline-block;"):
-                            with tag('span', klass='btn btn-outline-light btn-sm', onclick='toggleTextBoxControls(this.closest(".textBox"));'):
+                            with tag('span', klass='btn btn-outline-light btn-sm toggle-controls-button', onclick='toggleTextBoxControls(this.closest(".textBox"));'):
                                 text('m')
                     with tag('div', klass="textBox-btn-container"):
                         with tag('div', klass="tb-btn-group"):

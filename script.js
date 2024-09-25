@@ -22,12 +22,13 @@ let defaultState = {
     togglePaintBoxCreation: false,
     page_zindex: {},
     backgroundColor: '#C4C3D0',
-    textBoxBgColor: '#363839e8',
-    textBoxTextColor: '#e8e6e3',
+    textBoxBgColor: '#ffffffff',
+    textBoxTextColor: '#000000ff',
     editingTextBox: false,
     lastCopiedTb: null,
     draggingTextBox: null,
-    readingMode: false
+    readingMode: false,
+    showAllPaintBoxes: false
 };
 
 let state = JSON.parse(JSON.stringify(defaultState));
@@ -67,6 +68,7 @@ function updateUI() {
     document.getElementById('menuDefaultZoom').value = state.defaultZoomMode;
     document.getElementById('menuToggleOCRTextBoxes').checked = state.toggleOCRTextBoxes;
     document.getElementById('menuShowAllOCRTextBoxes').checked = state.showAllTextBoxes;
+    document.getElementById('menuShowAllPaintBoxes').checked = state.showAllTextBoxes;
     document.getElementById('menuToggleTextBoxCreation').checked = state.toggleTextBoxCreation;
     document.getElementById('menuTogglePaintBoxCreation').checked = state.togglePaintBoxCreation;
     document.getElementById('menuBackgroundColor').value = state.backgroundColor;
@@ -254,6 +256,7 @@ document.addEventListener('keydown', function (e) {
 
 document.addEventListener('mousedown', function (e) {
     if (state.draggingTextBox) {
+        state.draggingTextBox.querySelector('.close-button').classList.remove("disable");
         state.draggingTextBox = null;
         saveCurrentPage();
     }
@@ -353,8 +356,9 @@ function createEmptyTextBox(page_idx, e, paint=false) {
     if(paint){
         zindex = 2;
         div.classList.add("paint")
+    }else{
+        state.page_zindex[page_idx.toString()] = zindex + 1;
     }
-    state.page_zindex[page_idx.toString()] = zindex + 1;
     let coords = { x: 0, y: 0 };
     if (e) {
         coords = getMouseCoordinates(e);
@@ -367,13 +371,13 @@ function createEmptyTextBox(page_idx, e, paint=false) {
     div.innerHTML = `\
         <div class="textBox-top-bar">\
             <div style="display:inline-block;">\
-                <span class="btn btn-outline-light btn-sm float-left m-1" onclick="removeTextBox(this.closest('.textBox'))">x</span>\
+                <span class="btn btn-outline-light btn-sm float-left m-1 close-button" onclick="removeTextBox(this.closest('.textBox'))">x</span>\
             </div>\
             <div style="display:inline-block;">\
-                <span class="btn btn-outline-light btn-sm float-right m-1" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
+                <span class="btn btn-outline-light btn-sm float-right m-1 move-button" onclick="dragTextBox(this.closest('.textBox'))">✥</span>\
             </div>\
             <div style="display:inline-block;">\
-                <span class="btn btn-outline-light btn-sm m-1" onclick="toggleTextBoxControls(this.closest('.textBox'));">m</span>\
+                <span class="btn btn-outline-light btn-sm m-1 toggle-controls-button" onclick="toggleTextBoxControls(this.closest('.textBox'));">m</span>\
             </div>
         </div>\
         <div class="textBox-btn-container">\
@@ -406,22 +410,26 @@ function createEmptyTextBox(page_idx, e, paint=false) {
     return div;
 }
 
-function showAllTextBoxes() {
+function showAllTextBoxes(filter_paint_boxes=true) {
     console.log("Showing all text boxes")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
-        textBoxes[i].classList.add('hovered');
+        if(!(filter_paint_boxes && textBoxes[i].classList.contains("paint"))){
+            textBoxes[i].classList.add('hovered');
+        }
     }
 }
 
-function hideAllTextBoxes(close_boxes=false) {
+function hideAllTextBoxes(close_boxes=false, filter_paint_boxes=true) {
     console.log("Hiding all text boxes...")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
-        textBoxes[i].classList.remove('hovered');
-        textBoxes[i].classList.remove('doubleHovered');
-        if(close_boxes){
-            textBoxes[i].querySelector('.textBox-btn-container').style.display = "none";
+        if(!(filter_paint_boxes && textBoxes[i].classList.contains("paint"))){
+            textBoxes[i].classList.remove('hovered');
+            textBoxes[i].classList.remove('doubleHovered');
+            if(close_boxes){
+                textBoxes[i].querySelector('.textBox-btn-container').style.display = "none";
+            }
         }
     }
 }
@@ -497,11 +505,9 @@ function updateProperties() {
     setCssClassState(document.body, 'reading-mode', state.readingMode);
     let currentPage = getCurrentPage();
     updateCurrentPageImage(currentPage);
-    if (currentPage !== currentPageObjects.currentPage) {
-        currentPageObjects.currentPage = currentPage;
-        currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
-        currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
-    }
+    currentPageObjects.currentPage = currentPage;
+    currentPageObjects.textboxList = currentPageObjects.currentPage.querySelectorAll('.textBox');
+    currentPageObjects.textboxContentList = currentPageObjects.currentPage.querySelectorAll('.textBoxContent');
 
     if (state.displayOCR) {
         r.style.setProperty('--textBoxDisplay', 'flex');
@@ -513,10 +519,36 @@ function updateProperties() {
         r.style.setProperty('--colorBackground', state.backgroundColor)
     }
 
+    if(state.showAllPaintBoxes){
+        showAllPaintBoxes();
+    }else{
+        hideAllPaintBoxes();
+    }
+    
     if (state.showAllTextBoxes && !state.readingMode) {
         showAllTextBoxes();
     } else {
-        hideAllTextBoxes(state.readingMode);
+        hideAllTextBoxes(state.readingMode, !state.readingMode);
+    }
+    
+}
+
+function showAllPaintBoxes(){
+    let textBoxes = currentPageObjects.textboxList;
+    for (let i = 0; i < textBoxes.length; i++) {
+        if(textBoxes[i].classList.contains("paint")){
+            textBoxes[i].classList.add('hovered');
+        }
+    }
+}
+
+function hideAllPaintBoxes(){
+    let textBoxes = currentPageObjects.textboxList;
+    for (let i = 0; i < textBoxes.length; i++) {
+        if(textBoxes[i].classList.contains("paint")){
+            textBoxes[i].classList.remove('hovered');
+            textBoxes[i].classList.remove('doubleHovered');
+        }
     }
 }
 
@@ -572,8 +604,15 @@ document.getElementById('menuToggleOCRTextBoxes').addEventListener('click', func
     updateProperties();
 }, false);
 
+
 document.getElementById('menuShowAllOCRTextBoxes').addEventListener('click', function () {
     state.showAllTextBoxes = document.getElementById("menuShowAllOCRTextBoxes").checked;
+    saveState();
+    updateProperties();
+}, false);
+
+document.getElementById('menuShowAllPaintBoxes').addEventListener('click', function () {
+    state.showAllPaintBoxes = document.getElementById("menuShowAllPaintBoxes").checked;
     saveState();
     updateProperties();
 }, false);
@@ -929,7 +968,7 @@ async function loadPageFromStorage(page_idx) {
         jscolor.install();
         pushNotify("Loaded page from storage", "Loaded this page from storage");
         let tds = getCurrentPage().querySelectorAll(".textBox");
-        let previousTextBoxStyle = structuredClone(currentTextBoxStyle);
+        let previousTextBoxStyle = currentTextBoxStyle;
         for(let i = 0;i<tds.length;i++){
             copyTextBoxStyle(tds[i]);
             pasteTextBoxStyle(tds[i]);
@@ -1078,11 +1117,17 @@ async function transferTextBoxTextFromStorage() {
                     replicateTextBox(storage_tb, target_tb);
                     // it's a new textbox
                 } else {
+                    const is_paint_box =  storage_tb.classList.contains("paint");
                     // create an empty textbox
-                    let ntb = createEmptyTextBox(page_idx, null);
+                    let ntb = createEmptyTextBox(page_idx, null, is_paint_box);
                     replicateTextBox(storage_tb, ntb);
                     // add to page
-                    getPage(page_idx).querySelector(".pageContainer").appendChild(ntb);
+                    let pc = getPage(page_idx).querySelector(".pageContainer");
+                    if(is_paint_box){
+                        pc.insertBefore(ntb, pc.firstChild);
+                    }else{
+                        pc.appendChild(ntb);
+                    }
                 }
             }
             container.remove();
@@ -1118,6 +1163,7 @@ function randomIdGenerator() {
 
 function dragTextBox(tb) {
     state.draggingTextBox = tb;
+    tb.querySelector('.close-button').classList.add("disable");
 }
 
 async function resetcustomstorage() {
@@ -1232,7 +1278,7 @@ function setTextBoxBg(tb, color) {
         });
         tb.style.borderColor = "white";
     }
-    tb.querySelector('.textBox-btn-container').querySelector('.bg-color-input').jscolor.fromString(color);
+    tb.querySelector('.textBox-btn-container').querySelector('.bg-color-input').setAttribute("value", color);
 }
 
 function setTextBoxTextColor(tb, color) {
@@ -1245,7 +1291,7 @@ function setTextBoxTextColor(tb, color) {
         tbc.classList.add('white-stroke');
         tbc.classList.remove('thin-black-stroke');
     }
-    tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').jscolor.fromString(color);
+    tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').setAttribute("value", color);
 }
 
 function setTextBoxFontFamily(tb, value) {

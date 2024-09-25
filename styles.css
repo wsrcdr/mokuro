@@ -438,3 +438,8 @@ body.reading-mode .textBox-top-bar {
 .textBox.paint {
     border: 0;
 }
+
+.disable { 
+    pointer-events: none;
+    background-color: grey;
+}
