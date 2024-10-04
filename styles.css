@@ -445,3 +445,13 @@ body.reading-mode .textBox-top-bar {
     pointer-events: none;
     background-color: grey;
 }
+
+.textBoxContent textarea {
+    width: 100%;
+    height: 100%;
+    field-sizing: content;
+    resize: none;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}

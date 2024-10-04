@@ -655,9 +655,15 @@ document.getElementById('menuResetStorage').addEventListener('click', function (
     resetcustomstorage();
 }, false);
 
-document.getElementById('menuResetCurrentPage').addEventListener('click', function () {
+document.getElementById('menuResetCurrentPage').addEventListener('click', async function () {
     customstorage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
-    window.location.reload();
+    // get initial page
+    let ip = document.getElementById("page"+state.page_idx+"_initial");
+    pc.removeChild(getCurrentPage());
+    ip.id = "page"+state.page_idx;
+    await updatePage(state.page_idx);
+    updateUI();
+    updateProperties();
 }, false);
 
 document.getElementById('menuTransferTextBoxText').addEventListener('click', function () {
@@ -853,6 +859,15 @@ async function updatePage(new_page_idx) {
         state.page_idx = new_page_idx - 1;
     }
 
+    // save initial page before loading
+    if(!document.getElementById("page"+new_page_idx+"_initial")){
+        let initialPage = document.createElement("div");
+        initialPage.id = "page"+new_page_idx+"_initial";
+        initialPage.style.display = "none";
+        initialPage.innerHTML = document.getElementById("page"+new_page_idx).innerHTML;
+        pc.appendChild(initialPage);
+    }
+
     // update current page objects
     await loadPageFromStorage(new_page_idx);
     currentPageObjects.currentPage = getCurrentPage();
@@ -959,6 +974,13 @@ function getStorageBaseKey() {
     return key;
 }
 
+function getInitialPage(page_idx){
+    let p = document.getElementById("page"+page_idx+"_initial");
+    if(!p){
+        p = document.getElementById("page"+page_idx);
+    }
+    return p;
+}
 
 async function loadPageFromStorage(page_idx) {
     let key = getStorageBaseKey() + "_" + "page" + page_idx;
@@ -1033,11 +1055,11 @@ function editTextBox(tb) {
         // get content
         let content = container.innerHTML.replace("<p>", "").replace("</p>", "").trim();
         // update html with textarea
-        let ta = `<textarea style="width:100%;height:100%;font-size:${tb.style.fontSize};resize:none;">${content}</textarea>`;
+        let ta = `<textarea style="width:100%;height:100%;resize:none;">${content}</textarea>`;
         container.innerHTML = ta;
         // update textbox size for edit
         tb.style.height = "fit-content";
-        tb.style.width = "210px";
+        tb.style.width = Math.max(tb.clientWidth, 210)+"px";
         // select textarea
         let taEl = container.querySelector("textarea");
         // taEl.scrollIntoView();
@@ -1210,7 +1232,7 @@ class TextBoxStyle {
 function copyTextBoxStyle(tb) {
     let content = tb.querySelector('.textBoxContent');
     let bg = parseColorToHex(tb.style.background || state.textBoxBgColor);
-    let textColor = parseColorToHex(tb.querySelector('.textBox-btn-container').style.color || state.textBoxTextColor);
+    let textColor = parseColorToHex(tb.querySelector('.textBoxContent').style.color || state.textBoxTextColor);
     let font_family_input = tb.querySelector('.textBox-btn-container').querySelector('.font-family-input');
     let fontFamilyIndex = -1;
     if (font_family_input) {
