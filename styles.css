@@ -82,13 +82,13 @@ body {
 
 .textBoxContent p {
     display: table;
-    white-space: nowrap;
     letter-spacing: 0.1em;
     line-height: 1.1em;
     margin: 0;
     white-space: pre-wrap;
     font-family: inherit;
     text-align: center;
+    word-break: break-word;
 }
 
 .force-open {
