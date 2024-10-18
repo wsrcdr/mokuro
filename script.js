@@ -15,6 +15,8 @@ let defaultState = {
     singlePageView: true,
     displayOCR: true,
     fontSize: 14,
+    fontFamilyIndex: 0,
+    fontFamily: null,
     defaultZoomMode: "fit to screen",
     toggleOCRTextBoxes: true,
     showAllTextBoxes: false,
@@ -65,6 +67,9 @@ function updateUI() {
     document.getElementById("menuHasCover").checked = state.hasCover;
     document.getElementById("menuDisplayOCR").checked = state.displayOCR;
     document.getElementById('menuFontSize').value = state.fontSize;
+    let fontFamilySelect = document.getElementById('menuFontFamily');
+    fontFamilySelect.selectedIndex = state.fontFamilyIndex;
+    state.fontFamily = fontFamilySelect.options[fontFamilySelect.selectedIndex].value;
     document.getElementById('menuDefaultZoom').value = state.defaultZoomMode;
     document.getElementById('menuToggleOCRTextBoxes').checked = state.toggleOCRTextBoxes;
     document.getElementById('menuShowAllOCRTextBoxes').checked = state.showAllTextBoxes;
@@ -160,6 +165,7 @@ async function afterInitialLoadFinish() {
     setAllTextBoxesFontSize();
     setAllTextBoxesBg();
     setAllTextBoxesTextColor();
+    setAllTextBoxesFontFamily();
     await updatePage(state.page_idx);
 }
 
@@ -313,15 +319,14 @@ function initTextBoxes() {
                         jscolor.install();
                         setTextBoxBg(div, state.textBoxBgColor);
                         setTextBoxFontSize(div, state.fontSize);
-                        setTextBoxTextColor(div, state.textBoxTextColor);       
+                        setTextBoxTextColor(div, state.textBoxTextColor);
+                        setTextBoxFontFamily(div, state.fontFamily, state.fontFamilyIndex);      
                     }else if(state.togglePaintBoxCreation){
                         console.log("Adding paint textbox");
                         let div = createEmptyTextBox(state.page_idx, e, true);
                         closest_div.insertBefore(div, closest_div.firstChild);
                         jscolor.install();
                         setTextBoxBg(div, state.textBoxBgColor);
-                        setTextBoxFontSize(div, state.fontSize);
-                        setTextBoxTextColor(div, state.textBoxTextColor);
                     }
                 }
             }
@@ -332,17 +337,26 @@ function initTextBoxes() {
 function createEmptyTextBox(page_idx, e, paint=false) {
     let fonts = [
         "Noto Sans JP",
+        "Augie",
+        "CC Astro City",
+        "CC Wild Words Roman",
+        "Chicken Scratch",
         "East Sea Dokdo",
-        "Yuji Boku",
+        "Fighting Spirit",
+        "Help Me",
+        "Hi Melody",
+        "Komika Axis",
+        "Komika Boo",
+        "Miltonian Tattoo",
+        "Mochiy Pop P One",
         "Nanum Brush Script",
         "Nanum Pen Script",
-        "Yomogi",
         "Over the rainbow",
-        "Hi Melody",
-        "Mochiy Pop P One",
-        "Miltonian Tattoo"
+        "Pigae",
+        "Yomogi",
+        "Yuji Boku"
     ];
-    let font_picker_html = `<select class="btn btn-outline-light btn-sm font-family-input" onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);">`;
+    let font_picker_html = `<select class="btn btn-outline-light btn-sm font-family-input" onchange="handleFontFamilySelect(this);">`;
     fonts.forEach((el) => {
         font_picker_html += `<option style="font-family:${el};">${el}</option>`;
     });
@@ -398,8 +412,9 @@ function createEmptyTextBox(page_idx, e, paint=false) {
                 <input type="text" class="btn btn-outline-light btn-sm text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest('.textBox'),this.value);"></input>\
             </div>
             <div>
-            <input class="btn btn-outline-light btn-sm font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
-            ${font_picker_html}
+                <input class="btn btn-outline-light btn-sm font-size-input" type="number" style="width:2.5rem;" min="8" value="${fontSize}" onchange="setTextBoxFontSize(this.closest('.textBox'), this.value);"></input>\
+                ${font_picker_html}
+                <div style="font-family: 'Noto Sans JP';" class="btn btn-outline-light btn-sm" onclick="appendText(this.closest('.textBox'), '♥', 'Noto Sans JP');">♥</div>
             </div>\
         </div>\
         <div class="textBoxContent thin-black-stroke">\
@@ -440,6 +455,19 @@ function setAllTextBoxesFontSize() {
         for (let i = 0; i < textboxes.length; i++) {
             setTextBoxFontSize(textboxes[i], state.fontSize);
         }
+    }
+}
+
+function setAllTextBoxesFontFamily(value=null, index=null) {
+    let textboxes = pc.querySelectorAll('.textBox');
+    if(!value){
+        value = document.getElementById("menuFontFamily").value;
+    }
+    if(!index){
+        index = document.getElementById("menuFontFamily").selectedIndex;
+    }
+    for (let i = 0; i < textboxes.length; i++) {
+        setTextBoxFontFamily(textboxes[i], value, index);
     }
 }
 
@@ -646,6 +674,7 @@ document.getElementById('menuReset').addEventListener('click', async function ()
     setAllTextBoxesBg();
     setAllTextBoxesFontSize();
     setAllTextBoxesTextColor();
+    setAllTextBoxesFontFamily();
     updateUI();
     await updatePage(page_idx);
     updateProperties();
@@ -690,6 +719,14 @@ document.getElementById('menuFontSize').addEventListener('change', (e) => {
     if (state.fontSize !== 'auto') {
         setAllTextBoxesFontSize();
     }
+    saveState();
+    updateProperties();
+});
+
+document.getElementById('menuFontFamily').addEventListener('change', (e) => {
+    state.fontFamilyIndex = e.target.selectedIndex;
+    state.fontFamily = e.target.value;
+    setAllTextBoxesFontFamily(e.target.value, state.fontFamilyIndex);
     saveState();
     updateProperties();
 });
@@ -1236,7 +1273,7 @@ function copyTextBoxStyle(tb) {
     let font_family_input = tb.querySelector('.textBox-btn-container').querySelector('.font-family-input');
     let fontFamilyIndex = -1;
     if (font_family_input) {
-        fontFamilyIndex = font_family_input.selectedIndex;
+        fontFamilyIndex = font_family_input.getAttribute("selected_option") || 0;
     }
     let fontSize = tb.style.fontSize.replace("pt", "");
     if (!fontSize) {
@@ -1255,6 +1292,7 @@ function pasteTextBoxStyle(tb) {
         if (font_family_input && currentTextBoxStyle.fontFamilyIndex != -1) {
             font_family_input.selectedIndex = currentTextBoxStyle.fontFamilyIndex;
             let fontFamily = font_family_input.options[currentTextBoxStyle.fontFamilyIndex].value;
+            font_family_input.setAttribute("selected_option", currentTextBoxStyle.fontFamilyIndex);
             setTextBoxFontFamily(tb, fontFamily);
         }
         setTextBoxBg(tb, currentTextBoxStyle.bg);
@@ -1316,8 +1354,15 @@ function setTextBoxTextColor(tb, color) {
     tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').setAttribute("value", color);
 }
 
-function setTextBoxFontFamily(tb, value) {
+function setTextBoxFontFamily(tb, value, index=null) {
     tb.querySelector('.textBoxContent').style.fontFamily = value;
+    if(index){
+        let font_family_input = tb.querySelector('.textBox-btn-container .font-family-input');
+        if(font_family_input){
+            font_family_input.selectedIndex = index;
+            font_family_input.setAttribute("selected_option", index);
+        }
+    }
 }
 
 function hexToRgb(hex) {
@@ -1390,4 +1435,21 @@ function rgbaToHex (rgba) {
     })
 
     return ('#' + outParts.join(''));
+}
+
+function appendText(tb, text, font_family){
+    const textValue = `<span style="font-family: ${font_family};">${text}</span>`;
+    let area = tb.querySelector('textarea');
+    if(area){
+        area.value += textValue;
+    }
+    else{
+        let p = tb.querySelector('.textBoxContent p');
+        p.innerHTML += textValue;
+    }
+}
+
+function handleFontFamilySelect(s){
+    s.setAttribute("selected_option", s.selectedIndex);
+    setTextBoxFontFamily(s.closest('.textBox'), s.options[s.selectedIndex].value);
 }

@@ -1,9 +1,56 @@
+@font-face {
+    font-family: "Augie";
+    src: url("/static/fonts/augie.ttf");
+}
+@font-face {
+    font-family: "CC Wild Words Roman";
+    src: url("/static/fonts/cc_wild_words_roman.ttf");
+}
+@font-face {
+    font-family: "CC Astro City";
+    src: url("/static/fonts/ccastro_city.ttf");
+}
+@font-face {
+    font-family: "Chicken Scratch";
+    src: url("/static/fonts/chickenscratch.ttf");
+}
+@font-face {
+    font-family: "Fighting Spirit";
+    src: url("/static/fonts/fighting_spirit.otf");
+}
+@font-face {
+    font-family: "Fighting Spirit";
+    src: url("/static/fonts/fighting_spirit_bold.ttf");
+    font-weight: bold;
+}
+@font-face {
+    font-family: "Fighting Spirit";
+    src: url("/static/fonts/fighting_spirit_italic.ttf");
+    font-style: italic;
+}
+@font-face {
+    font-family: "Help Me";
+    src: url("/static/fonts/helpme.ttf");
+}
+@font-face {
+    font-family: "Komika Axis";
+    src: url("/static/fonts/komika_axis.ttf");
+}
+@font-face {
+    font-family: "Komika Boo";
+    src: url("/static/fonts/komika_boo.ttf");
+}
+@font-face {
+    font-family: "Pigae";
+    src: url("/static/fonts/pigae.ttf");
+}
+
 :root {
     --textBoxDisplay: flex;
-    --textBoxBorderHoverColor: white;
+    --textBoxBorderHoverColor: black;
     --textBoxFontSize: 1em;
-    --textBoxBgColor: #363839e8;
-    --textBoxTextColor: #e8e6e3;
+    --textBoxBgColor: white;
+    --textBoxTextColor: black;
     --colorBackground: #343341;
     --color1: #f9f9fb;
     --color2: #e2e2e9;
@@ -78,6 +125,7 @@ body {
     width: 100%;
     height: 100%;
     justify-content: center;
+    font-family: "CC Wild Words Roman", "Noto Sans JP";
 }
 
 .textBoxContent p {
@@ -454,4 +502,14 @@ body.reading-mode .textBox-top-bar {
     font-size: inherit;
     font-family: inherit;
     color: inherit;
+}
+
+.option{
+    font-weight: normal;
+    display: block;
+    padding-block-start: 0px;
+    padding-block-end: 1px;
+    min-block-size: 1.2em;
+    padding-inline: 2px;
+    white-space: nowrap;
 }

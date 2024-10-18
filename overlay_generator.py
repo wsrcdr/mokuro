@@ -46,7 +46,27 @@ ABOUT_DEMO = ABOUT + """
 <p>This demo contains excerpt from <a href="http://www.manga109.org/en/download_s.html" target="_blank">Manga109-s dataset</a>.</p>
 <p>うちの猫’ず日記 &copy; がぁさん</p>
 """
-
+FONTS = [
+    "Noto Sans JP",
+    "Augie",
+    "CC Astro City",
+    "CC Wild Words Roman",
+    "Chicken Scratch",
+    "East Sea Dokdo",
+    "Fighting Spirit",
+    "Help Me",
+    "Hi Melody",
+    "Komika Axis",
+    "Komika Boo",
+    "Miltonian Tattoo",
+    "Mochiy Pop P One",
+    "Nanum Brush Script",
+    "Nanum Pen Script",
+    "Over the rainbow",
+    "Pigae",
+    "Yomogi",
+    "Yuji Boku"
+]
 
 class OverlayGenerator:
     def __init__(self,
@@ -320,6 +340,7 @@ class OverlayGenerator:
                             option_toggle('menuTogglePaintBoxCreation', 'Create paintbox on click')
                             option_select('menuFontSize', 'font size: ',
                                         ['auto', 9, 10, 11, 12, 14, 16, 18, 20, 24, 32, 40, 48, 60])
+                            option_select('menuFontFamily', 'font family: ', FONTS)
                             option_color('menuTextBoxBgColor', 'textbox bg color', '#363839e8')
                             option_color('menuTextBoxTextColor', 'textbox text color', '#e8e6e3')
                 option_collapse('resetOptions', 'Reset options')
@@ -352,18 +373,6 @@ class OverlayGenerator:
 
         with tag('div', klass='pageContainer', style=self.get_container_style(result, img_path)):
             block_count = 0
-            fonts = [
-                "Noto Sans JP",
-                "East Sea Dokdo",
-                "Yuji Boku",
-                "Nanum Brush Script",
-                "Nanum Pen Script",
-                "Yomogi",
-                "Over the rainbow",
-                "Hi Melody",
-                "Mochiy Pop P One",
-                "Miltonian Tattoo"
-            ]
             for result_blk, z_index in zip(result['blocks'], z_idxs):
                 block_count += 1
                 box_style = self.get_box_style(result_blk, z_index, result['img_width'], result['img_height'])
@@ -401,11 +410,13 @@ class OverlayGenerator:
                             doc.asis('<input type="text" class="btn btn-outline-light btn-sm bg-color-input" size="8" value="363839e8" data-jscolor="{}" onchange="setTextBoxBg(this.closest(\'.textBox\'),this.value);"></input>')
                             doc.asis('<input type="text" class="btn btn-outline-light btn-sm text-color-input" size="8" value="e8e6e3FF" data-jscolor="{}" onchange="setTextBoxTextColor(this.closest(\'.textBox\'),this.value);"></input>')
                         with tag('div'):
-                            with tag('select', klass="btn btn-outline-light btn-sm font-family-input", onchange="setTextBoxFontFamily(this.closest('.textBox'), this.options[this.selectedIndex].value);"):
-                                for font in fonts:
+                            with tag('select', klass="btn btn-outline-light btn-sm font-family-input", onchange="handleFontFamilySelect(this);"):
+                                for font in FONTS:
                                     doc.asis(f'<option style="font-family: {font};">{font}</option>')
                             with tag('input', klass="btn btn-outline-light btn-sm font-size-input", type="number", style="width:2.5rem;", min="8",value=str(np.clip(result_blk['font_size'], 8, 32)), onchange=f"setTextBoxFontSize(this.closest('.textBox'),this.value);"):
                                 pass
+                            with tag('div', style="font-family: 'Noto Sans JP';", klass='btn btn-outline-light btn-sm', onclick=f"appendText(this.closest('.textBox'), '♥', 'Noto Sans JP');"):
+                                text('♥')
                         
 
                     content = "\n".join(result_blk['lines'])
