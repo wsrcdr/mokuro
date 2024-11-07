@@ -255,8 +255,8 @@ class OverlayGenerator:
             with tag('span', id='pageIdxDisplay'):
                 pass
 
-            doc.asis('<button id="saveCurrentPageTopMenuButton" class="menuButton" onclick="saveCurrentPage();">💾</button>')
-            doc.asis('<button id="savePageToImageButton" class="menuButton" onclick="savePageToImage(state.page_idx);">📤</button>')
+            doc.asis('<button id="saveCurrentPageTopMenuButton" class="menuBUtton" onclick="saveCurrentPage();">💾</button>')
+
             # workaround for yomichan including the menu bar in the {sentence} field when mining for some reason
             with tag('span', style='color:rgba(255,255,255,0.1);font-size:1px;'):
                 text('。')

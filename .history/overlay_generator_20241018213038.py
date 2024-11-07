@@ -191,7 +191,7 @@ class OverlayGenerator:
 
                     with tag('a', id='rightAPage', href='#'):
                         pass
-                doc.asis('<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js" integrity="sha512-01CJ9/g7e8cUmY0DFTMcUw/ikS799FHiOA0eyHsUWfOetgbx/t6oV4otQ5zXKQyIrQGTHSmRVPIgrgLcZi/WMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>')
+                
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>')
                 doc.asis('<script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>')
                 if manga_id:
@@ -255,8 +255,8 @@ class OverlayGenerator:
             with tag('span', id='pageIdxDisplay'):
                 pass
 
-            doc.asis('<button id="saveCurrentPageTopMenuButton" class="menuButton" onclick="saveCurrentPage();">💾</button>')
-            doc.asis('<button id="savePageToImageButton" class="menuButton" onclick="savePageToImage(state.page_idx);">📤</button>')
+            doc.asis('<button id="saveCurrentPageTopMenuButton" class="menuBUtton" onclick="saveCurrentPage();">💾</button>')
+
             # workaround for yomichan including the menu bar in the {sentence} field when mining for some reason
             with tag('span', style='color:rgba(255,255,255,0.1);font-size:1px;'):
                 text('。')

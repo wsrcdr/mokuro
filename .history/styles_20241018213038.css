@@ -20,12 +20,12 @@
 }
 @font-face {
     font-family: "Fighting Spirit";
-    src: url("/static/fonts/fighting_spirit_bold.otf");
+    src: url("/static/fonts/fighting_spirit_bold.ttf");
     font-weight: bold;
 }
 @font-face {
     font-family: "Fighting Spirit";
-    src: url("/static/fonts/fighting_spirit_italic.otf");
+    src: url("/static/fonts/fighting_spirit_italic.ttf");
     font-style: italic;
 }
 @font-face {
@@ -502,8 +502,6 @@ body.reading-mode .textBox-top-bar {
     font-size: inherit;
     font-family: inherit;
     color: inherit;
-    background-color: inherit;
-    border: solid;
 }
 
 .option{

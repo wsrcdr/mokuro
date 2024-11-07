@@ -1453,6 +1453,5 @@ function savePageToImage(page_idx) {
     domtoimage.toBlob(getPage(page_idx))
         .then(function(blob) {
             customstorage.savePage(blob, page_idx + 1);
-            pushNotify("Uploaded page", "Uploaded the page as it looks like now to server! Visit the manga to view the pages!");
         });
 }

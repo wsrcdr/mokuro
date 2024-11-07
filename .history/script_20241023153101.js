@@ -283,7 +283,7 @@ function initTextBoxes() {
     document.addEventListener('mouseup', function(e) {
         closest_div = e.target.closest('div');
         console.log('Clicked on: ', closest_div);
-        if (closest_div && !closest_div.classList.contains("textBox-btn-container") && !e.target.classList?.contains("btn")) {
+        if (closest_div && !closest_div.classList.contains("textBox-btn-container") && !e.target.classList ? .contains("btn")) {
             let tb = closest_div.closest('.textBox');
             if (tb && tb.contains(closest_div)) {
                 console.log("Clicked inside a textbox!");
@@ -1453,6 +1453,5 @@ function savePageToImage(page_idx) {
     domtoimage.toBlob(getPage(page_idx))
         .then(function(blob) {
             customstorage.savePage(blob, page_idx + 1);
-            pushNotify("Uploaded page", "Uploaded the page as it looks like now to server! Visit the manga to view the pages!");
         });
 }

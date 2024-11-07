@@ -99,6 +99,9 @@ class CustomStorage {
             try {
                 await fetch(url, {
                     method: "POST",
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
                     body: formData
                 });
                 return null;

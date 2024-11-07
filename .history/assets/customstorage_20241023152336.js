@@ -93,13 +93,14 @@ class CustomStorage {
 
     async savePage(blob, page) {
         if (this.storageMode == "localhost") {
-            let formData = new FormData();
-            formData.append("pageImageFile", blob);
-            let url = `http://localhost:5000/manga/${this.manga_id}/mokuro/page/${page}`
+            url = `http://localhost:5000/manga/${this.manga_id}/mokuro/page/${page}`
             try {
                 await fetch(url, {
                     method: "POST",
-                    body: formData
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    body: JSON.stringify(body)
                 });
                 return null;
             } catch (error) {

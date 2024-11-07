@@ -42,7 +42,7 @@ let customInput = null;
 customInput = document.createElement("input");
 customInput.id = "customInternalInput";
 customInput.style.display = "none";
-customInput = new JSColor(customInput, { 'backgroundColor': 'rgba(255,255,255,0)' });
+customInput = new JSColor(customInput, {'backgroundColor': 'rgba(255,255,255,0)'});
 
 function saveState() {
     state.draggingTextBox = null;
@@ -81,7 +81,7 @@ function updateUI() {
     document.getElementById('menuTextBoxTextColor').value = state.textBoxTextColor;
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     await customstorage.initStorage();
     await loadState();
     let transferingData = sessionStorage.getItem("transferingData");
@@ -98,18 +98,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         zoomDoubleClickSpeed: 1,
         enableTextSelection: true,
 
-        beforeMouseDown: function(e) {
+        beforeMouseDown: function (e) {
             let shouldIgnore = disablePanzoomOnElement(e.target) ||
                 (e.target.closest('.textBox') !== null)
             return shouldIgnore;
         },
 
-        beforeWheel: function(e) {
+        beforeWheel: function (e) {
             let shouldIgnore = disablePanzoomOnElement(e.target);
             return shouldIgnore;
         },
 
-        onTouch: function(e) {
+        onTouch: function (e) {
             if (disablePanzoomOnElement(e.target)) {
                 e.stopPropagation();
                 return false;
@@ -150,9 +150,8 @@ async function afterInitialLoadFinish() {
 
     // add some custom inputs here
     let ids = [{ id: "menuBackgroundColor", target: "state.backgroundColor" },
-        { id: "menuTextBoxBgColor", target: "state.textBoxBgColor" },
-        { id: "menuTextBoxTextColor", target: "state.textBoxTextColor" }
-    ];
+    { id: "menuTextBoxBgColor", target: "state.textBoxBgColor" },
+    { id: "menuTextBoxTextColor", target: "state.textBoxTextColor" }];
     for (let i = 0; i < ids.length; i++) {
         let el = document.getElementById(ids[i].id);
         el.setAttribute("value", eval(ids[i].target));
@@ -245,12 +244,12 @@ function getMouseCoordinates(e) {
     let y = e.clientY - rect.top;
 
     return {
-        x: x * (1 / scale), // multiply with inverse zoom factor
+        x: x * (1 / scale),  // multiply with inverse zoom factor
         y: y * (1 / scale)
     };
 }
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     if (!state.editingTextBox) {
         if (e.key == "ArrowLeft") {
             inputLeft();
@@ -261,7 +260,7 @@ document.addEventListener('keydown', function(e) {
     }
 })
 
-document.addEventListener('mousedown', function(e) {
+document.addEventListener('mousedown', function (e) {
     if (state.draggingTextBox) {
         state.draggingTextBox.querySelector('.close-button').classList.remove("disable");
         state.draggingTextBox = null;
@@ -269,7 +268,7 @@ document.addEventListener('mousedown', function(e) {
     }
 });
 
-document.addEventListener('mousemove', function(e) {
+document.addEventListener('mousemove', function (e) {
     if (state.draggingTextBox) {
         let coords = getMouseCoordinates(e);
         state.draggingTextBox.style.left = coords.x - (state.draggingTextBox.getBoundingClientRect().width / 2);
@@ -279,8 +278,8 @@ document.addEventListener('mousemove', function(e) {
 
 function initTextBoxes() {
     console.log("initiating text boxes...")
-        // Add event listeners for toggling ocr text boxes with the toggleOCRTextBoxes option.
-    document.addEventListener('mouseup', function(e) {
+    // Add event listeners for toggling ocr text boxes with the toggleOCRTextBoxes option.
+    document.addEventListener('mouseup', function (e) {
         closest_div = e.target.closest('div');
         console.log('Clicked on: ', closest_div);
         if (closest_div && !closest_div.classList.contains("textBox-btn-container") && !e.target.classList?.contains("btn")) {
@@ -291,7 +290,8 @@ function initTextBoxes() {
                     if (tb.classList.contains("doubleHovered")) {
                         tb.classList.remove("doubleHovered");
                         window.getSelection().removeAllRanges();
-                    } else if (tb.classList.contains("hovered")) {
+                    }
+                    else if (tb.classList.contains("hovered")) {
                         tb.classList.remove("hovered");
                         tb.classList.add("doubleHovered");
                         // select and copy contents
@@ -299,7 +299,8 @@ function initTextBoxes() {
                         selectNode(contentNode);
                         e.preventDefault();
                         //copyTextBoxContent(contentNode);
-                    } else {
+                    }
+                    else {
                         tb.classList.add("hovered");
                     }
                 } else if (state.toggleOCRTextBoxes && !state.editingTextBox && state.showAllTextBoxes && !tb.classList.contains('force-open')) {
@@ -308,7 +309,8 @@ function initTextBoxes() {
                     selectNode(contentNode);
                     // copyTextBoxContent(contentNode);
                 }
-            } else {
+            }
+            else {
                 if (closest_div.classList.contains("pageContainer")) {
                     if (state.toggleTextBoxCreation) {
                         console.log("adding empty textbox");
@@ -318,8 +320,8 @@ function initTextBoxes() {
                         setTextBoxBg(div, state.textBoxBgColor);
                         setTextBoxFontSize(div, state.fontSize);
                         setTextBoxTextColor(div, state.textBoxTextColor);
-                        setTextBoxFontFamily(div, state.fontFamily, state.fontFamilyIndex);
-                    } else if (state.togglePaintBoxCreation) {
+                        setTextBoxFontFamily(div, state.fontFamily, state.fontFamilyIndex);      
+                    }else if(state.togglePaintBoxCreation){
                         console.log("Adding paint textbox");
                         let div = createEmptyTextBox(state.page_idx, e, true);
                         closest_div.insertBefore(div, closest_div.firstChild);
@@ -332,7 +334,7 @@ function initTextBoxes() {
     });
 }
 
-function createEmptyTextBox(page_idx, e, paint = false) {
+function createEmptyTextBox(page_idx, e, paint=false) {
     let fonts = [
         "Noto Sans JP",
         "Augie",
@@ -365,10 +367,10 @@ function createEmptyTextBox(page_idx, e, paint = false) {
     let id = randomIdGenerator();
     div.id = id;
     let zindex = state.page_zindex[page_idx.toString()] || 50;
-    if (paint) {
+    if(paint){
         zindex = 2;
         div.classList.add("paint")
-    } else {
+    }else{
         state.page_zindex[page_idx.toString()] = zindex + 1;
     }
     let coords = { x: 0, y: 0 };
@@ -423,24 +425,24 @@ function createEmptyTextBox(page_idx, e, paint = false) {
     return div;
 }
 
-function showAllTextBoxes(filter_paint_boxes = true) {
+function showAllTextBoxes(filter_paint_boxes=true) {
     console.log("Showing all text boxes")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
-        if (!(filter_paint_boxes && textBoxes[i].classList.contains("paint"))) {
+        if(!(filter_paint_boxes && textBoxes[i].classList.contains("paint"))){
             textBoxes[i].classList.add('hovered');
         }
     }
 }
 
-function hideAllTextBoxes(close_boxes = false, filter_paint_boxes = true) {
+function hideAllTextBoxes(close_boxes=false, filter_paint_boxes=true) {
     console.log("Hiding all text boxes...")
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
-        if (!(filter_paint_boxes && textBoxes[i].classList.contains("paint"))) {
+        if(!(filter_paint_boxes && textBoxes[i].classList.contains("paint"))){
             textBoxes[i].classList.remove('hovered');
             textBoxes[i].classList.remove('doubleHovered');
-            if (close_boxes) {
+            if(close_boxes){
                 textBoxes[i].querySelector('.textBox-btn-container').style.display = "none";
             }
         }
@@ -456,12 +458,12 @@ function setAllTextBoxesFontSize() {
     }
 }
 
-function setAllTextBoxesFontFamily(value = null, index = null) {
+function setAllTextBoxesFontFamily(value=null, index=null) {
     let textboxes = pc.querySelectorAll('.textBox');
-    if (!value) {
+    if(!value){
         value = document.getElementById("menuFontFamily").value;
     }
-    if (!index) {
+    if(!index){
         index = document.getElementById("menuFontFamily").selectedIndex;
     }
     for (let i = 0; i < textboxes.length; i++) {
@@ -545,33 +547,33 @@ function updateProperties() {
         r.style.setProperty('--colorBackground', state.backgroundColor)
     }
 
-    if (state.showAllPaintBoxes) {
+    if(state.showAllPaintBoxes){
         showAllPaintBoxes();
-    } else {
+    }else{
         hideAllPaintBoxes();
     }
-
+    
     if (state.showAllTextBoxes && !state.readingMode) {
         showAllTextBoxes();
     } else {
         hideAllTextBoxes(state.readingMode, !state.readingMode);
     }
-
+    
 }
 
-function showAllPaintBoxes() {
+function showAllPaintBoxes(){
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
-        if (textBoxes[i].classList.contains("paint")) {
+        if(textBoxes[i].classList.contains("paint")){
             textBoxes[i].classList.add('hovered');
         }
     }
 }
 
-function hideAllPaintBoxes() {
+function hideAllPaintBoxes(){
     let textBoxes = currentPageObjects.textboxList;
     for (let i = 0; i < textBoxes.length; i++) {
-        if (textBoxes[i].classList.contains("paint")) {
+        if(textBoxes[i].classList.contains("paint")){
             textBoxes[i].classList.remove('hovered');
             textBoxes[i].classList.remove('doubleHovered');
         }
@@ -593,63 +595,63 @@ function savePage(page_idx) {
     customstorage.setItem(key, page.innerHTML);
 }
 
-document.getElementById('menuReadingMode').addEventListener('click', function(e) {
+document.getElementById('menuReadingMode').addEventListener('click', function(e){
     state.readingMode = e.target.checked;
     saveState();
     updateUI();
     updateProperties();
 }, false);
 
-document.getElementById('menuR2l').addEventListener('click', async function() {
+document.getElementById('menuR2l').addEventListener('click', async function () {
     state.r2l = document.getElementById("menuR2l").checked;
     saveState();
     await updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuDoublePageView').addEventListener('click', async function() {
+document.getElementById('menuDoublePageView').addEventListener('click', async function () {
     state.singlePageView = !document.getElementById("menuDoublePageView").checked;
     saveState();
     await updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuHasCover').addEventListener('click', async function() {
+document.getElementById('menuHasCover').addEventListener('click', async function () {
     state.hasCover = document.getElementById("menuHasCover").checked;
     saveState();
     await updatePage(state.page_idx);
 }, false);
 
-document.getElementById('menuDisplayOCR').addEventListener('click', function() {
+document.getElementById('menuDisplayOCR').addEventListener('click', function () {
     state.displayOCR = document.getElementById("menuDisplayOCR").checked;
     saveState();
     updateProperties();
 }, false);
 
-document.getElementById('menuToggleOCRTextBoxes').addEventListener('click', function() {
+document.getElementById('menuToggleOCRTextBoxes').addEventListener('click', function () {
     state.toggleOCRTextBoxes = document.getElementById("menuToggleOCRTextBoxes").checked;
     saveState();
     updateProperties();
 }, false);
 
 
-document.getElementById('menuShowAllOCRTextBoxes').addEventListener('click', function() {
+document.getElementById('menuShowAllOCRTextBoxes').addEventListener('click', function () {
     state.showAllTextBoxes = document.getElementById("menuShowAllOCRTextBoxes").checked;
     saveState();
     updateProperties();
 }, false);
 
-document.getElementById('menuShowAllPaintBoxes').addEventListener('click', function() {
+document.getElementById('menuShowAllPaintBoxes').addEventListener('click', function () {
     state.showAllPaintBoxes = document.getElementById("menuShowAllPaintBoxes").checked;
     saveState();
     updateProperties();
 }, false);
 
-document.getElementById('menuToggleTextBoxCreation').addEventListener('click', function() {
+document.getElementById('menuToggleTextBoxCreation').addEventListener('click', function () {
     state.toggleTextBoxCreation = document.getElementById("menuToggleTextBoxCreation").checked;
     saveState();
     updateProperties();
 }, false);
 
-document.getElementById('menuTogglePaintBoxCreation').addEventListener('click', function() {
+document.getElementById('menuTogglePaintBoxCreation').addEventListener('click', function () {
     state.togglePaintBoxCreation = document.getElementById("menuTogglePaintBoxCreation").checked;
     saveState();
     updateProperties();
@@ -660,13 +662,13 @@ document.getElementById('menuFitToWidth').addEventListener('click', zoomFitToWid
 document.getElementById('menuFitToScreen').addEventListener('click', zoomFitToScreen, false);
 document.getElementById('menuFullScreen').addEventListener('click', toggleFullScreen, false);
 
-document.getElementById('menuAbout').addEventListener('click', function() {
+document.getElementById('menuAbout').addEventListener('click', function () {
     document.getElementById('popupAbout').style.display = 'block';
     document.getElementById('dimOverlay').style.display = 'initial';
     pz.pause();
 }, false);
 
-document.getElementById('menuReset').addEventListener('click', async function() {
+document.getElementById('menuReset').addEventListener('click', async function () {
     let page_idx = state.page_idx;
     state = JSON.parse(JSON.stringify(defaultState));
     setAllTextBoxesBg();
@@ -678,35 +680,35 @@ document.getElementById('menuReset').addEventListener('click', async function() 
     updateProperties();
 }, false);
 
-document.getElementById('menuResetStorage').addEventListener('click', function() {
+document.getElementById('menuResetStorage').addEventListener('click', function () {
     resetcustomstorage();
 }, false);
 
-document.getElementById('menuResetCurrentPage').addEventListener('click', async function() {
+document.getElementById('menuResetCurrentPage').addEventListener('click', async function () {
     customstorage.removeItem(getStorageBaseKey() + "_" + "page" + state.page_idx);
     // get initial page
-    let ip = document.getElementById("page" + state.page_idx + "_initial");
+    let ip = document.getElementById("page"+state.page_idx+"_initial");
     pc.removeChild(getCurrentPage());
-    ip.id = "page" + state.page_idx;
+    ip.id = "page"+state.page_idx;
     await updatePage(state.page_idx);
     updateUI();
     updateProperties();
 }, false);
 
-document.getElementById('menuTransferTextBoxText').addEventListener('click', function() {
+document.getElementById('menuTransferTextBoxText').addEventListener('click', function () {
     pushNotify('Replacing textbox text', "Getting textboxes' text from page storage and replacing the html. Page storage will be updated after this...");
     startTextTransferFromStorage();
 }, false);
 
-document.getElementById('menuSavePage').addEventListener('click', function() {
+document.getElementById('menuSavePage').addEventListener('click', function () {
     saveCurrentPage();
 }, false);
 
-document.getElementById('menuSaveFile').addEventListener('click', function() {
+document.getElementById('menuSaveFile').addEventListener('click', function () {
     saveFile();
 }, false);
 
-document.getElementById('dimOverlay').addEventListener('click', function() {
+document.getElementById('dimOverlay').addEventListener('click', function () {
     document.getElementById('popupAbout').style.display = 'none';
     document.getElementById('dimOverlay').style.display = 'none';
     pz.resume();
@@ -735,17 +737,17 @@ document.getElementById('menuDefaultZoom').addEventListener('change', (e) => {
 });
 
 
-document.getElementById('pageIdxInput').addEventListener('change', async(e) => {
+document.getElementById('pageIdxInput').addEventListener('change', async (e) => {
     await updatePage(e.target.value - 1);
 })
 
-document.getElementById('buttonHideMenu').addEventListener('click', function() {
+document.getElementById('buttonHideMenu').addEventListener('click', function () {
     // document.getElementById('topMenu').style.display = "none";
     document.getElementById('showMenuA').style.display = "inline-block";
     document.getElementById('topMenu').classList.add("hidden");
 }, false);
 
-document.getElementById('showMenuA').addEventListener('click', function() {
+document.getElementById('showMenuA').addEventListener('click', function () {
     // document.getElementById('topMenu').style.display = "initial";
     document.getElementById('showMenuA').style.display = "none";
     document.getElementById('topMenu').classList.remove("hidden");
@@ -895,11 +897,11 @@ async function updatePage(new_page_idx) {
     }
 
     // save initial page before loading
-    if (!document.getElementById("page" + new_page_idx + "_initial")) {
+    if(!document.getElementById("page"+new_page_idx+"_initial")){
         let initialPage = document.createElement("div");
-        initialPage.id = "page" + new_page_idx + "_initial";
+        initialPage.id = "page"+new_page_idx+"_initial";
         initialPage.style.display = "none";
-        initialPage.innerHTML = document.getElementById("page" + new_page_idx).innerHTML;
+        initialPage.innerHTML = document.getElementById("page"+new_page_idx).innerHTML;
         pc.appendChild(initialPage);
     }
 
@@ -998,7 +1000,7 @@ function toggleFullScreen() {
     }
 }
 
-document.addEventListener('copy', function(e) {
+document.addEventListener('copy', function (e) {
     var text = window.getSelection().anchorNode.closest('.textBox').querySelector('.textBoxContent').textContent.replace(/[\n\r]+/g, ' ');
     e.clipboardData.setData('text/plain', text);
     e.preventDefault();
@@ -1009,10 +1011,10 @@ function getStorageBaseKey() {
     return key;
 }
 
-function getInitialPage(page_idx) {
-    let p = document.getElementById("page" + page_idx + "_initial");
-    if (!p) {
-        p = document.getElementById("page" + page_idx);
+function getInitialPage(page_idx){
+    let p = document.getElementById("page"+page_idx+"_initial");
+    if(!p){
+        p = document.getElementById("page"+page_idx);
     }
     return p;
 }
@@ -1026,7 +1028,7 @@ async function loadPageFromStorage(page_idx) {
         pushNotify("Loaded page from storage", "Loaded this page from storage");
         let tds = getCurrentPage().querySelectorAll(".textBox");
         let previousTextBoxStyle = currentTextBoxStyle;
-        for (let i = 0; i < tds.length; i++) {
+        for(let i = 0;i<tds.length;i++){
             copyTextBoxStyle(tds[i]);
             pasteTextBoxStyle(tds[i]);
         }
@@ -1094,7 +1096,7 @@ function editTextBox(tb) {
         container.innerHTML = ta;
         // update textbox size for edit
         tb.style.height = "fit-content";
-        tb.style.width = Math.max(tb.clientWidth, 210) + "px";
+        tb.style.width = Math.max(tb.clientWidth, 210)+"px";
         // select textarea
         let taEl = container.querySelector("textarea");
         // taEl.scrollIntoView();
@@ -1108,7 +1110,8 @@ function toggleTextBoxControls(tb) {
     if (el.style.display != "flex") {
         el.style.display = "flex";
         el.style.flexWrap = "wrap";
-    } else {
+    }
+    else {
         el.style.display = "none";
     }
 }
@@ -1173,15 +1176,15 @@ async function transferTextBoxTextFromStorage() {
                     replicateTextBox(storage_tb, target_tb);
                     // it's a new textbox
                 } else {
-                    const is_paint_box = storage_tb.classList.contains("paint");
+                    const is_paint_box =  storage_tb.classList.contains("paint");
                     // create an empty textbox
                     let ntb = createEmptyTextBox(page_idx, null, is_paint_box);
                     replicateTextBox(storage_tb, ntb);
                     // add to page
                     let pc = getPage(page_idx).querySelector(".pageContainer");
-                    if (is_paint_box) {
+                    if(is_paint_box){
                         pc.insertBefore(ntb, pc.firstChild);
-                    } else {
+                    }else{
                         pc.appendChild(ntb);
                     }
                 }
@@ -1211,7 +1214,7 @@ function replicateTextBox(og, target) {
 }
 
 function randomIdGenerator() {
-    var S4 = function() {
+    var S4 = function () {
         return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
     };
     return ("id" + S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
@@ -1282,7 +1285,8 @@ function copyTextBoxStyle(tb) {
 function pasteTextBoxStyle(tb) {
     if (!currentTextBoxStyle) {
         alert("You need to first copy a textbox style!");
-    } else {
+    }
+    else {
         let controls = tb.querySelector('.textBox-btn-container');
         let font_family_input = controls.querySelector('.font-family-input');
         if (font_family_input && currentTextBoxStyle.fontFamilyIndex != -1) {
@@ -1350,11 +1354,11 @@ function setTextBoxTextColor(tb, color) {
     tb.querySelector('.textBox-btn-container').querySelector('.text-color-input').setAttribute("value", color);
 }
 
-function setTextBoxFontFamily(tb, value, index = null) {
+function setTextBoxFontFamily(tb, value, index=null) {
     tb.querySelector('.textBoxContent').style.fontFamily = value;
-    if (index) {
+    if(index){
         let font_family_input = tb.querySelector('.textBox-btn-container .font-family-input');
-        if (font_family_input) {
+        if(font_family_input){
             font_family_input.selectedIndex = index;
             font_family_input.setAttribute("selected_option", index);
         }
@@ -1364,7 +1368,7 @@ function setTextBoxFontFamily(tb, value, index = null) {
 function hexToRgb(hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
         return r + r + g + g + b + b;
     });
 
@@ -1377,40 +1381,40 @@ function hexToRgb(hex) {
     return `rgb(${r},${g},${b})`;
 }
 
-function parseColorToHex(color_str) {
-    if (color_str.startsWith("#")) {
+function parseColorToHex(color_str){
+    if(color_str.startsWith("#")){
         return color_str;
     }
-    if (color_str.startsWith("rgb(")) {
+    if(color_str.startsWith("rgb(")){
         customInput.fromString(color_str);
         return customInput.toHEXAString();
     }
-    if (color_str.startsWith("rgba(")) {
+    if(color_str.startsWith("rgba(")){
         return rgbaToHex(color_str);
     }
 }
 
-function toggleCssClass(el, cls) {
-    if (el.classList.contains(cls)) {
+function toggleCssClass(el, cls){
+    if(el.classList.contains(cls)){
         el.classList.remove(cls);
-    } else {
+    }else{
         el.classList.add(cls);
     }
 }
 
-function setCssClassState(el, cls, state) {
-    if (state) {
+function setCssClassState(el, cls, state){
+    if(state){
         el.classList.add(cls);
-    } else {
+    }else{
         el.classList.remove(cls);
     }
 }
 
-function trim(str) {
-    return str.replace(/^\s+|\s+$/gm, '');
+function trim (str) {
+    return str.replace(/^\s+|\s+$/gm,'');
 }
-
-function rgbaToHex(rgba) {
+  
+function rgbaToHex (rgba) {
     var inParts = rgba.substring(rgba.indexOf("(")).split(","),
         r = parseInt(trim(inParts[0].substring(1)), 10),
         g = parseInt(trim(inParts[1]), 10),
@@ -1424,35 +1428,32 @@ function rgbaToHex(rgba) {
     ];
 
     // Pad single-digit output values
-    outParts.forEach(function(part, i) {
+    outParts.forEach(function (part, i) {
         if (part.length === 1) {
-            outParts[i] = '0' + part;
+        outParts[i] = '0' + part;
         }
     })
 
     return ('#' + outParts.join(''));
 }
 
-function appendText(tb, text, font_family) {
+function appendText(tb, text, font_family){
     const textValue = `<span style="font-family: ${font_family};">${text}</span>`;
     let area = tb.querySelector('textarea');
-    if (area) {
+    if(area){
         area.value += textValue;
-    } else {
+    }
+    else{
         let p = tb.querySelector('.textBoxContent p');
         p.innerHTML += textValue;
     }
 }
 
-function handleFontFamilySelect(s) {
+function handleFontFamilySelect(s){
     s.setAttribute("selected_option", s.selectedIndex);
     setTextBoxFontFamily(s.closest('.textBox'), s.options[s.selectedIndex].value);
 }
 
-function savePageToImage(page_idx) {
-    domtoimage.toBlob(getPage(page_idx))
-        .then(function(blob) {
-            customstorage.savePage(blob, page_idx + 1);
-            pushNotify("Uploaded page", "Uploaded the page as it looks like now to server! Visit the manga to view the pages!");
-        });
-}
+function savePageToImage(page_idx):
+    let page = getPage(page_idx);
+    
